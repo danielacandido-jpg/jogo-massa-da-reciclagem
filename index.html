@@ -3,26 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desafio Pegada de Plástico - Edição Suprema</title>
+    <title>Desafio Pegada de Plástico</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #0c736b 0%, #11998e 100%); padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: #ffffff; width: 100%; max-width: 600px; border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        
+        body { 
+            background: linear-gradient(135deg, #0c736b 0%, #11998e 100%); 
+            padding: 15px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* FUNDO DINÂMICO DA ILHA (SVG/CSS) */
+        .island-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            transition: all 0.8s ease;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 60%, #20b2aa 100%);
+        }
+
+        /* Variação de poluição no céu/água */
+        .island-bg.dirty {
+            background: linear-gradient(to bottom, #7f8c8d 0%, #bdc3c7 60%, #4a5a5d 100%);
+        }
+        .island-bg.clean {
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 60%, #00c6ff 100%);
+        }
+
+        /* Desenho da Ilha */
+        .island-graphic {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            height: 250px;
+            text-align: center;
+        }
+
+        .trash-item {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .island-bg.dirty .trash-item { opacity: 1; }
+
+        .nature-item {
+            position: absolute;
+            font-size: 26px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .island-bg.clean .nature-item { opacity: 1; }
+
+        /* CARTÃO DO JOGO */
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            width: 100%; 
+            max-width: 580px; 
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+            position: relative; 
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+
         .screen { display: none; }
         .screen.active { display: block; }
-        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px; text-align: center; }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 8px; text-align: center; }
         p { color: #6c757d; font-size: 14px; line-height: 1.4; margin-bottom: 15px; text-align: center; }
         
         .sound-toggle { position: absolute; top: 15px; right: 15px; background: #e9ecef; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 10; }
         
-        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group { margin-bottom: 12px; text-align: left; }
         label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #2c3e50; }
         input[type="text"] { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px; outline: none; }
         
-        /* Seleção de Mascote e Acessórios */
-        .selection-title { font-weight: bold; font-size: 14px; color: #2c3e50; margin: 12px 0 6px 0; text-align: left; }
-        .grid-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .sel-item { border: 2px solid #e9ecef; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 26px; position: relative; background: #f8f9fa; transition: all 0.2s; user-select: none; }
+        /* Seletores */
+        .selection-title { font-weight: bold; font-size: 14px; color: #2c3e50; margin: 10px 0 6px 0; text-align: left; }
+        .grid-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+        .sel-item { border: 2px solid #e9ecef; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 26px; background: #f8f9fa; transition: all 0.2s; user-select: none; }
         .sel-item.active { border-color: #11998e; background: #e8f8f5; transform: scale(1.03); box-shadow: 0 4px 10px rgba(17,153,142,0.2); }
         .sel-item span { display: block; font-size: 11px; color: #2c3e50; margin-top: 4px; font-weight: 600; }
 
@@ -30,9 +99,8 @@
         .btn:hover { background: #0c736b; }
         .btn-sec { background: #6c757d; }
         .btn-inf { background: #8e44ad; }
-        .btn-inf:hover { background: #71368a; }
-        
-        /* Quiz Styles */
+
+        /* Quiz */
         .header-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #11998e; margin-bottom: 10px; align-items: center; }
         .progress-bg { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         .progress-fill { height: 100%; width: 0%; background: #38ef7d; transition: width 0.3s; }
@@ -42,7 +110,7 @@
         .feedback-box { display: none; background: #e8f8f5; border: 2px solid #11998e; border-radius: 10px; padding: 12px; margin-top: 10px; text-align: center; }
         .feedback-pts { font-size: 16px; font-weight: bold; color: #0c736b; }
 
-        /* Arcade Styles Kahoot */
+        /* Arcade Kahoot */
         .arcade-box { text-align: center; }
         .timer-kahoot { width: 100%; height: 10px; background: #e9ecef; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
         .timer-kahoot-fill { height: 100%; width: 100%; background: #f39c12; transition: width 0.1s linear; }
@@ -56,10 +124,9 @@
         .bin-paper { background: #3498db; }
         .bin-glass { background: #2ecc71; }
         .bin-organic { background: #7f8c8d; }
-        
         .combo-badge { display: inline-block; background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
 
-        /* Tabs Ranking */
+        /* Rankings */
         .rank-tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; border: 1px solid #ccc; background: #f1f1f1; cursor: pointer; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .tab-btn.active { background: #11998e; color: white; border-color: #11998e; }
@@ -71,13 +138,41 @@
 </head>
 <body>
 
+<!-- FUNDO ANIMADO DA ILHA -->
+<div class="island-bg" id="bg-island">
+    <div class="island-graphic">
+        <!-- Elementos de Poluição (Erros) -->
+        <span class="trash-item" style="left: 15%; bottom: 40px;">🛍️</span>
+        <span class="trash-item" style="left: 25%; bottom: 20px;">🍾</span>
+        <span class="trash-item" style="right: 20%; bottom: 35px;">🥤</span>
+        <span class="trash-item" style="right: 30%; bottom: 15px;">🚬</span>
+
+        <!-- Elementos de Natureza Viva (Acertos) -->
+        <span class="nature-item" style="left: 18%; bottom: 60px;">🌸</span>
+        <span class="nature-item" style="left: 35%; bottom: 80px;">🌺</span>
+        <span class="nature-item" style="right: 22%; bottom: 65px;">🐬</span>
+        <span class="nature-item" style="right: 38%; bottom: 75px;">🐠</span>
+
+        <!-- Ilustração da Ilha em SVG -->
+        <svg viewBox="0 0 500 150" width="100%" height="100%">
+            <path d="M10,130 Q250,50 490,130 Z" fill="#f4d03f" />
+            <path d="M50,130 Q250,70 450,130 Z" fill="#27ae60" />
+            <!-- Palmeira -->
+            <rect x="240" y="40" width="10" height="50" fill="#795548" rx="3" />
+            <circle cx="230" cy="35" r="15" fill="#2ecc71" />
+            <circle cx="265" cy="35" r="15" fill="#2ecc71" />
+            <circle cx="247" cy="20" r="15" fill="#2ecc71" />
+        </svg>
+    </div>
+</div>
+
 <div class="card">
     <button class="sound-toggle" id="btn-sound">🔊</button>
 
     <!-- 1. TELA INICIAL -->
     <div id="s-start" class="screen active">
         <h1>♻️ Desafio Pegada de Plástico</h1>
-        <p>Aprenda, jogue o Arcade rápido e conquiste o topo do ranking!</p>
+        <p>Sua pontuação muda o ecossistema da ilha ao fundo em tempo real!</p>
         
         <div class="form-group">
             <label for="username">Seu Nome / Apelido:</label>
@@ -85,10 +180,24 @@
         </div>
 
         <div class="selection-title">Escolha seu Mascote:</div>
-        <div class="grid-selector" id="box-mascots"></div>
+        <div class="grid-selector" id="box-mascots">
+            <div class="sel-item active" onclick="selectMascot('turtle', this)">🐢<span>Tartaruga</span></div>
+            <div class="sel-item" onclick="selectMascot('dolphin', this)">🐬<span>Golfinho</span></div>
+            <div class="sel-item" onclick="selectMascot('whale', this)">🐳<span>Baleia</span></div>
+            <div class="sel-item" onclick="selectMascot('shark', this)">🦈<span>Tubarão</span></div>
+            <div class="sel-item" onclick="selectMascot('octopus', this)">🐙<span>Polvo</span></div>
+            <div class="sel-item" onclick="selectMascot('capybara', this)">🦫<span>Capivara</span></div>
+        </div>
 
         <div class="selection-title">Acessórios:</div>
-        <div class="grid-selector" id="box-accs"></div>
+        <div class="grid-selector" id="box-accs">
+            <div class="sel-item active" onclick="selectAcc('none', this)">❌<span>Nenhum</span></div>
+            <div class="sel-item" onclick="selectAcc('glasses', this)">🕶️<span>Óculos</span></div>
+            <div class="sel-item" onclick="selectAcc('cap', this)">🧢<span>Boné</span></div>
+            <div class="sel-item" onclick="selectAcc('bow', this)">🎀<span>Laço</span></div>
+            <div class="sel-item" onclick="selectAcc('crown', this)">👑<span>Coroa</span></div>
+            <div class="sel-item" onclick="selectAcc('magic', this)">✨<span>Brilho</span></div>
+        </div>
 
         <button class="btn" id="btn-start-quiz">Modo Quiz + Arcade 🚀</button>
         <button class="btn btn-inf" id="btn-start-inf">Modo Infinito (Sobrevivência) ⏱️</button>
@@ -111,7 +220,7 @@
         </div>
     </div>
 
-    <!-- 3. TELA DO ARCADE (KAHOOT STYLE) -->
+    <!-- 3. TELA DO ARCADE -->
     <div id="s-arcade" class="screen arcade-box">
         <div class="header-info">
             <span id="arc-mode-title">Arcade Rápido</span>
@@ -126,10 +235,10 @@
         </div>
 
         <div class="bin-grid">
-            <button class="bin-btn bin-plastic" id="btn-bin-plastic">🔴 Plástico</button>
-            <button class="bin-btn bin-paper" id="btn-bin-paper">🔵 Papel</button>
-            <button class="bin-btn bin-glass" id="btn-bin-glass">🟢 Vidro</button>
-            <button class="bin-btn bin-organic" id="btn-bin-organic">⚪ Orgânico</button>
+            <button class="bin-btn bin-plastic" onclick="checkBin('plastic')">🔴 Plástico</button>
+            <button class="bin-btn bin-paper" onclick="checkBin('paper')">🔵 Papel</button>
+            <button class="bin-btn bin-glass" onclick="checkBin('glass')">🟢 Vidro</button>
+            <button class="bin-btn bin-organic" onclick="checkBin('organic')">⚪ Orgânico</button>
         </div>
     </div>
 
@@ -151,8 +260,8 @@
         <h2 style="text-align:center; color:#2c3e50; margin-bottom:10px;">🏆 Placar de Líderes</h2>
         
         <div class="rank-tabs">
-            <button class="tab-btn active" id="tab-norm">Quiz + Arcade</button>
-            <button class="tab-btn" id="tab-inf">Modo Infinito</button>
+            <button class="tab-btn active" id="tab-norm" onclick="switchRankTab('norm')">Quiz + Arcade</button>
+            <button class="tab-btn" id="tab-inf" onclick="switchRankTab('inf')">Modo Infinito</button>
         </div>
 
         <div id="rank-list" style="max-height: 200px; overflow-y: auto; margin-bottom:15px;"></div>
@@ -194,23 +303,23 @@
         } catch(e) {}
     }
 
-    var mascots = [
-        { id: 'turtle', name: 'Tartaruga', icon: '🐢' },
-        { id: 'dolphin', name: 'Golfinho', icon: '🐬' },
-        { id: 'whale', name: 'Baleia', icon: '🐳' },
-        { id: 'shark', name: 'Tubarão', icon: '🦈' },
-        { id: 'octopus', name: 'Polvo', icon: '🐙' },
-        { id: 'capybara', name: 'Capivara', icon: '🦫' }
-    ];
+    var mascotIcons = { turtle:'🐢', dolphin:'🐬', whale:'🐳', shark:'🦈', octopus:'🐙', capybara:'🦫' };
+    var accIcons = { none:'', glasses:'🕶️', cap:'🧢', bow:'🎀', crown:'👑', magic:'✨' };
 
-    var accessories = [
-        { id: 'none', name: 'Nenhum', icon: '❌' },
-        { id: 'glasses', name: 'Óculos', icon: '🕶️' },
-        { id: 'cap', name: 'Boné', icon: '🧢' },
-        { id: 'bow', name: 'Laço', icon: '🎀' },
-        { id: 'crown', name: 'Coroa', icon: '👑' },
-        { id: 'magic', name: 'Brilho', icon: '✨' }
-    ];
+    var selectedMascot = 'turtle';
+    var selectedAcc = 'none';
+    var userName = "Anônimo";
+    var totalScore = 0;
+    var currentQ = 0;
+    var isInfiniteMode = false;
+    
+    var arcadeTimer = null;
+    var itemTimer = null;
+    var globalTimeLeft = 60;
+    var itemTimeLeft = 7.5;
+    var currentItem = null;
+    var comboCount = 0;
+    var currentRankTab = 'norm';
 
     var wasteList = [
         { name: "Garrafa PET", type: "plastic", icon: "🍾" },
@@ -229,61 +338,32 @@
         { q: "Qual o seu hábito ao pedir delivery de comida?", opts: [{ txt: "Aceito talheres e canudos plásticos.", pts: 1, fb: "Esses itens viram lixo em menos de 10 minutos." }, { txt: "Peço para não enviarem descartáveis.", pts: 3, fb: "Muito bem! Use seus próprios talheres em casa." }] }
     ];
 
-    var selectedMascot = 'turtle';
-    var selectedAcc = 'none';
-    var userName = "Anônimo";
-    var totalScore = 0;
-    var currentQ = 0;
-    var isInfiniteMode = false;
-    
-    var arcadeTimer = null;
-    var itemTimer = null;
-    var globalTimeLeft = 60;
-    var itemTimeLeft = 7.5;
-    var currentItem = null;
-    var comboCount = 0;
-    var currentRankTab = 'norm';
+    function updateIslandVisual() {
+        var bg = document.getElementById('bg-island');
+        if (totalScore >= 500) {
+            bg.className = 'island-bg clean';
+        } else if (totalScore < 0 || comboCount === 0 && totalScore < 200) {
+            bg.className = 'island-bg dirty';
+        } else {
+            bg.className = 'island-bg';
+        }
+    }
 
-    function renderSelectors() {
-        var mBox = document.getElementById('box-mascots');
-        mBox.innerHTML = '';
-        mascots.forEach(function(m) {
-            var div = document.createElement('div');
-            div.className = 'sel-item' + (m.id === selectedMascot ? ' active' : '');
-            div.innerHTML = m.icon + '<span>' + m.name + '</span>';
-            div.onclick = function() { selectedMascot = m.id; renderSelectors(); };
-            mBox.appendChild(div);
-        });
+    function selectMascot(id, el) {
+        selectedMascot = id;
+        document.querySelectorAll('#box-mascots .sel-item').forEach(function(item) { item.classList.remove('active'); });
+        el.classList.add('active');
+    }
 
-        var aBox = document.getElementById('box-accs');
-        aBox.innerHTML = '';
-        accessories.forEach(function(a) {
-            var div = document.createElement('div');
-            div.className = 'sel-item' + (a.id === selectedAcc ? ' active' : '');
-            div.innerHTML = a.icon + '<span>' + a.name + '</span>';
-            div.onclick = function() { selectedAcc = a.id; renderSelectors(); };
-            aBox.appendChild(div);
-        });
+    function selectAcc(id, el) {
+        selectedAcc = id;
+        document.querySelectorAll('#box-accs .sel-item').forEach(function(item) { item.classList.remove('active'); });
+        el.classList.add('active');
     }
 
     function setScreen(id) {
         document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
         document.getElementById(id).classList.add('active');
-    }
-
-    function startQuizMode() {
-        if (!validateName()) return;
-        isInfiniteMode = false;
-        currentQ = 0; totalScore = 0;
-        loadQuizQ();
-        setScreen('s-quiz');
-    }
-
-    function startInfMode() {
-        if (!validateName()) return;
-        isInfiniteMode = true;
-        totalScore = 0;
-        startArcade();
     }
 
     function validateName() {
@@ -292,6 +372,23 @@
         userName = n;
         document.getElementById('u-tag').innerText = '@' + userName;
         return true;
+    }
+
+    function startQuizMode() {
+        if (!validateName()) return;
+        isInfiniteMode = false;
+        currentQ = 0; totalScore = 0;
+        updateIslandVisual();
+        loadQuizQ();
+        setScreen('s-quiz');
+    }
+
+    function startInfMode() {
+        if (!validateName()) return;
+        isInfiniteMode = true;
+        totalScore = 0;
+        updateIslandVisual();
+        startArcade();
     }
 
     function loadQuizQ() {
@@ -308,9 +405,10 @@
             b.className = 'option-btn';
             b.innerText = o.txt;
             b.onclick = function() {
-                totalScore += o.pts * 100;
-                playSound('correct');
-                document.getElementById('fb-pts').innerText = '+' + (o.pts * 100) + ' Pts!';
+                totalScore += (o.pts === 3 ? 300 : -100);
+                updateIslandVisual();
+                playSound(o.pts === 3 ? 'correct' : 'wrong');
+                document.getElementById('fb-pts').innerText = (o.pts === 3 ? '+300 Pts!' : '-100 Pts');
                 document.getElementById('fb-msg').innerText = o.fb;
                 document.getElementById('fb-box').style.display = 'block';
                 document.querySelectorAll('.option-btn').forEach(function(btn) { btn.disabled = true; });
@@ -368,8 +466,10 @@
             document.getElementById('item-timer-bar').style.width = Math.max(0, ((itemTimeLeft / 7.5) * 100)) + '%';
             if (itemTimeLeft <= 0) {
                 playSound('wrong');
+                totalScore -= 100;
                 comboCount = 0;
                 updateComboTag();
+                updateIslandVisual();
                 nextArcadeItem();
             }
         }, 100);
@@ -380,7 +480,7 @@
         if (type === currentItem.type) {
             comboCount++;
             var mult = comboCount >= 3 ? 2 : 1;
-            var pointsEarned = Math.round((itemTimeLeft / 7.5) * 1000) * mult;
+            var pointsEarned = Math.round((itemTimeLeft / 7.5) * 500) * mult;
             if (currentItem.isGold) pointsEarned *= 2;
 
             totalScore += Math.max(100, pointsEarned);
@@ -389,9 +489,11 @@
             if (isInfiniteMode) { globalTimeLeft += 1; }
         } else {
             playSound('wrong');
+            totalScore -= 150;
             comboCount = 0;
         }
         updateComboTag();
+        updateIslandVisual();
         nextArcadeItem();
     }
 
@@ -411,12 +513,9 @@
 
         var key = isInfiniteMode ? 'ecoRankInf' : 'ecoRankNorm';
         var r = JSON.parse(localStorage.getItem(key) || '[]');
-        var mObj = mascots.find(function(m){ return m.id === selectedMascot; });
-        var aObj = accessories.find(function(a){ return a.id === selectedAcc; });
-        var mIcon = mObj ? mObj.icon : '🐢';
-        var aIcon = (aObj && aObj.icon !== '❌') ? aObj.icon : '';
+        var mascotStr = mascotIcons[selectedMascot] + accIcons[selectedAcc];
         
-        r.push({ name: userName, score: totalScore, mascot: mIcon + aIcon });
+        r.push({ name: userName, score: totalScore, mascot: mascotStr });
         r.sort(function(a,b){ return b.score - a.score; });
         localStorage.setItem(key, JSON.stringify(r.slice(0, 10)));
 
@@ -479,8 +578,6 @@
     }
 
     window.onload = function() {
-        renderSelectors();
-
         document.getElementById('btn-sound').onclick = function() {
             soundEnabled = !soundEnabled;
             this.innerText = soundEnabled ? '🔊' : '🔇';
@@ -492,15 +589,10 @@
         document.getElementById('btn-next').onclick = advanceQuiz;
         document.getElementById('btn-download-cert').onclick = generateCert;
         document.getElementById('btn-rank-res').onclick = function() { renderRanking(); setScreen('s-rank'); };
-        document.getElementById('btn-restart').onclick = function() { setScreen('s-start'); };
+        document.getElementById('btn-restart').onclick = function() { totalScore = 0; updateIslandVisual(); setScreen('s-start'); };
 
         document.getElementById('tab-norm').onclick = function() { switchRankTab('norm'); };
         document.getElementById('tab-inf').onclick = function() { switchRankTab('inf'); };
-
-        document.getElementById('btn-bin-plastic').onclick = function() { checkBin('plastic'); };
-        document.getElementById('btn-bin-paper').onclick = function() { checkBin('paper'); };
-        document.getElementById('btn-bin-glass').onclick = function() { checkBin('glass'); };
-        document.getElementById('btn-bin-organic').onclick = function() { checkBin('organic'); };
     };
 </script>
 </body>
