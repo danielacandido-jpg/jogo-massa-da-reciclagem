@@ -111,7 +111,7 @@
         <button class="btn btn-sec" id="btn-rank-start">Ver Rankings 🏆</button>
     </div>
 
-    <!-- 2. TELA DO QUIZ (10 PERGUNTAS COM 3 OPÇÕES) -->
+    <!-- 2. TELA DO QUIZ (10 PERGUNTAS) -->
     <div id="s-quiz" class="screen">
         <div class="header-info">
             <span id="q-num">Pergunta 1/10</span>
@@ -127,7 +127,7 @@
         </div>
     </div>
 
-    <!-- 3. TELA DO ARCADE (6 LIXEIRAS) -->
+    <!-- 3. TELA DO ARCADE -->
     <div id="s-arcade" class="screen arcade-box">
         <div class="header-info">
             <span id="arc-mode-title">Arcade Rápido</span>
@@ -236,36 +236,69 @@
     var comboCount = 0;
     var currentRankTab = 'norm';
 
+    // 50 RESÍDUOS VARIADOS
     var wasteList = [
+        // PLÁSTICO (🔴)
         { name: "Garrafa PET", type: "plastic", icon: "🍾" },
         { name: "Saco Plástico", type: "plastic", icon: "🛍️" },
         { name: "Copo Descartável", type: "plastic", icon: "🥤" },
         { name: "Canudo Plástico", type: "plastic", icon: "🥤" },
-        
+        { name: "Embalagem de Salgadinho", type: "plastic", icon: "🍿" },
+        { name: "Pote de Iogurte", type: "plastic", icon: "🍧" },
+        { name: "Frasco de Xampu", type: "plastic", icon: "🧴" },
+        { name: "Escova de Dentes Plástica", type: "plastic", icon: "🪥" },
+        { name: "Brinquedo Plástico Quebrado", type: "plastic", icon: "🧸" },
+
+        // PAPEL (🔵)
         { name: "Jornal Velho", type: "paper", icon: "📰" },
         { name: "Caixa de Papelão", type: "paper", icon: "📦" },
         { name: "Revista Usada", type: "paper", icon: "📖" },
         { name: "Saco de Pão", type: "paper", icon: "🥖" },
+        { name: "Envelope de Carta", type: "paper", icon: "✉️" },
+        { name: "Folha de Rascunho", type: "paper", icon: "📄" },
+        { name: "Caixa de Cereal", type: "paper", icon: "🥣" },
+        { name: "Rolo de Papel Toalha", type: "paper", icon: "🧻" },
+        { name: "Caixa de Ovo de Papelão", type: "paper", icon: "🥚" },
 
+        // VIDRO (🟢)
         { name: "Garrafa de Vidro", type: "glass", icon: "🍾" },
         { name: "Pote de Azeitona", type: "glass", icon: "🫙" },
-        { name: "Copo de Vidro", type: "glass", icon: "🥃" },
+        { name: "Copo de Vidro Quebrado", type: "glass", icon: "🥃" },
         { name: "Frasco de Perfume", type: "glass", icon: "🧪" },
+        { name: "Pote de Geleia", type: "glass", icon: "🏺" },
+        { name: "Garrafa de Azeite", type: "glass", icon: "🫒" },
+        { name: "Caco de Vidro Embalado", type: "glass", icon: "🧩" },
+        { name: "Frasco de Xarope/Remédio", type: "glass", icon: "💊" },
 
+        // METAL (🟡)
         { name: "Lata de Refrigerante", type: "metal", icon: "🥫" },
         { name: "Lata de Conserva", type: "metal", icon: "🥫" },
         { name: "Folha de Alumínio", type: "metal", icon: "⚙️" },
         { name: "Tampinha de Garrafa", type: "metal", icon: "🔘" },
+        { name: "Lacre de Latinha", type: "metal", icon: "🔗" },
+        { name: "Clipe de Papel", type: "metal", icon: "📎" },
+        { name: "Panela Velha de Alumínio", type: "metal", icon: "🍳" },
+        { name: "Prego / Parafuso", type: "metal", icon: "🔩" },
 
+        // ORGÂNICO (⚪)
         { name: "Casca de Banana", type: "organic", icon: "🍌" },
         { name: "Restos de Maçã", type: "organic", icon: "🍎" },
         { name: "Borra de Café", type: "organic", icon: "☕" },
         { name: "Casca de Ovo", type: "organic", icon: "🥚" },
+        { name: "Saquinho de Chá Usado", type: "organic", icon: "🫖" },
+        { name: "Restos de Salada", type: "organic", icon: "🥗" },
+        { name: "Osso de Galinha", type: "organic", icon: "🍗" },
+        { name: "Casca de Laranja", type: "organic", icon: "🍊" },
 
-        { name: "Esponja de Louça", type: "nonrec", icon: "🧽" },
-        { name: "Papel Higiênico", type: "nonrec", icon: "🧻" },
+        // REJEITO / NÃO RECICLÁVEL (🟤)
+        { name: "Esponja de Louça Sintética", type: "nonrec", icon: "🧽" },
+        { name: "Papel Higiênico Usado", type: "nonrec", icon: "🧻" },
         { name: "Fralda Descartável", type: "nonrec", icon: "👶" },
-        { name: "Espelho Quebrado", type: "nonrec", icon: "🪞" }
+        { name: "Espelho Quebrado", type: "nonrec", icon: "🪞" },
+        { name: "Fita Adesiva Usada", type: "nonrec", icon: "🏷️" },
+        { name: "Chiclete Mascado", type: "nonrec", icon: "🍬" },
+        { name: "Guardanapo Engordurado", type: "nonrec", icon: "🍕" },
+        { name: "Máscara Descartável", type: "nonrec", icon: "😷" }
     ];
 
     // 10 PERGUNTAS COM 3 OPÇÕES DE RESPOSTA
@@ -401,7 +434,7 @@
             document.getElementById('arc-mode-title').innerText = "Modo Infinito (Morte Sólida)";
             document.getElementById('arc-global-timer').innerText = "🚀 Sobrevivência";
         } else {
-            globalTimeLeft = 30;
+            globalTimeLeft = 60;
             document.getElementById('arc-mode-title').innerText = "Arcade Rápido";
             clearInterval(arcadeTimer);
             arcadeTimer = setInterval(function() {
