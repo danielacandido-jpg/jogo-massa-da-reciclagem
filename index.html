@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Pegada de Plástico - Edição Arcade</title>
+    <style>
+        /* RESET & BASE STYLES */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body { background: linear-gradient(135deg, #0d5c56 0%, #11998e 50%, #38ef7d 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 12px; color: #1e293b; }
+
+        /* CONTAINER CARD */
+        .game-card { background: #ffffff; width: 100%; max-width: 600px; border-radius: 24px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; overflow: hidden; min-height: 520px; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* SCREEN TRANSITIONS */
+        .screen { display: none; opacity: 0; transform: translateY(12px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .screen.active { display: flex; flex-direction: column; opacity: 1; transform: translateY(0); flex-grow: 1; justify-content: space-between; }
+
+        /* TYPOGRAPHY & BUTTONS */
+        h1 { color: #0d5c56; font-size: 26px; text-align: center; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px; }
+        h2 { color: #1e293b; font-size: 20px; text-align: center; margin-bottom: 12px; font-weight: 700; }
+        p { color: #64748b; font-size: 14px; line-height: 1.5; text-align: center; margin-bottom: 16px; }
+
+        .btn { background: linear-gradient(135deg, #11998e, #0c736b); color: #ffffff; border: none; padding: 14px 20px; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 10px; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3); display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(12, 115, 107, 0.4); }
+        .btn:active { transform: translateY(1px); }
+        .btn-sec { background: #f1f5f9; color: #475569; box-shadow: none; border: 2px solid #e2e8f0; }
+        .btn-sec:hover { background: #e2e8f0; }
+
+        /* TELA 1: AVATAR & NOME */
+        .form-group { margin-bottom: 16px; text-align: left; }
+        label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px; color: #334155; }
+        input[type="text"] { width: 100%; padding: 12px 16px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; font-weight: 600; color: #0f172a; }
+        input[type="text"]:focus { border-color: #11998e; }
+
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .avatar-card { border: 2px solid #e2e8f0; border-radius: 14px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
+        .avatar-card.selected { border-color: #11998e; background: #e6f4f1; transform: scale(1.05); box-shadow: 0 4px 10px rgba(17,153,142,0.2); }
+        .avatar-icon { font-size: 32px; display: block; margin-bottom: 2px; }
+        .avatar-name { font-size: 11px; font-weight: 700; color: #475569; }
+
+        /* TELA 2: QUIZ INTERATIVO */
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: #11998e; margin-bottom: 10px; }
+        .user-badge { display: flex; align-items: center; gap: 6px; background: #e6f4f1; padding: 4px 12px; border-radius: 20px; color: #0d5c56; }
+        
+        .progress-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; margin-bottom: 16px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #11998e, #38ef7d); transition: width 0.3s ease; }
+        
+        .question-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 14px; line-height: 1.4; text-align: left; }
+        .options-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        
+        .option-btn { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: #334155; width: 100%; text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 600; line-height: 1.3; }
+        .option-btn:hover:not(:disabled) { border-color: #11998e; background: #f0fdfa; transform: translateX(3px); }
+        .option-btn.selected { background: #d1f2eb; border-color: #11998e; color: #0c736b; font-weight: 700; }
+        .option-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .feedback-card { display: none; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 12px; margin-top: 10px; text-align: center; }
+        .feedback-pts { font-size: 15px; font-weight: 800; color: #15803d; margin-bottom: 4px; }
+        .feedback-text { font-size: 12.5px; color: #166534; margin-bottom: 8px; line-height: 1.3; text-align: center; }
+
+        /* TELA 3: MINI-GAME ARCADE PROGRESSIVO */
+        .arcade-hud { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; text-align: center; }
+        .hud-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 8px; }
+        .hud-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        .hud-val { font-size: 18px; font-weight: 800; color: #0f172a; }
+
+        .combo-badge { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 8px; padding: 2px 6px; font-size: 11px; font-weight: 800; display: inline-block; animation: pulse 0.6s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.95); } to { transform: scale(1.05); } }
+
+        .item-timer-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+        .item-timer-fill { height: 100%; width: 100%; background: #ef4444; transition: width 0.1s linear; }
+
+        .waste-card { background: #ffffff; border: 3px dashed #cbd5e1; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 14px; position: relative; transition: transform 0.15s ease; }
+        .waste-card.pop { animation: popAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .waste-card.shake { animation: shakeAnim 0.3s ease; border-color: #ef4444; }
+
+        @keyframes popAnim { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shakeAnim { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+        .waste-icon { font-size: 64px; display: block; margin-bottom: 6px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .waste-name { font-size: 18px; font-weight: 800; color: #1e293b; }
+        .waste-hint { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+
+        /* LIXEIRAS DO MINI-GAME (GRID DE 6 CATEGORIAS) */
+        .bins-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+        .bin-btn { border: none; border-radius: 12px; padding: 10px 4px; color: white; font-weight: 800; font-size: 11px; cursor: pointer; transition: transform 0.1s, filter 0.2s; display: flex; flex-direction: column; align-items: center; gap: 3px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .bin-btn:active { transform: scale(0.92); }
+        .bin-btn span { font-size: 18px; }
+
+        .bin-plastic { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .bin-paper { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .bin-glass { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .bin-metal { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .bin-organic { background: linear-gradient(135deg, #854d0e, #713f12); }
+        .bin-special { background: linear-gradient(135deg, #6b21a8, #581c87); }
+
+        /* TELA 4: RESULTADO & BADGES */
+        .score-header { text-align: center; margin-bottom: 14px; }
+        .score-circle { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto 10px; font-size: 28px; font-weight: 900; box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4); }
+        
+        .badges-section { margin-bottom: 12px; }
+        .badges-title { font-size: 12px; font-weight: 800; color: #64748b; text-align: center; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .badges-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .badge-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s ease; }
+        .badge-card.unlocked { opacity: 1; filter: grayscale(0%); background: #f0fdf4; border-color: #86efac; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15); }
+        .badge-icon { font-size: 22px; }
+        .badge-info { text-align: left; }
+        .badge-name { font-size: 11px; font-weight: 800; color: #0f172a; }
+        .badge-desc { font-size: 9px; color: #64748b; font-weight: 600; }
+
+        /* TELA 5: RANKING LOCAL */
+        .ranking-list { max-height: 220px; overflow-y: auto; margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+        .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; }
+        .ranking-item.top-1 { background: #fefce8; border-color: #fde047; font-weight: bold; }
+        .rank-user { display: flex; align-items: center; gap: 8px; }
+
+        /* FLOATING SCORE FEEDBACK */
+        .float-score { position: absolute; font-weight: 900; font-size: 20px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-35px) scale(1.3); } }
+    </style>
+</head>
+<body>
+
+<div class="game-card" id="main-card">
+
+    <!-- 1. TELA INICIAL (AVATAR E NOMES) -->
+    <div id="s-start" class="screen active">
+        <div>
+            <h1>♻️ Pegada de Plástico</h1>
+            <p>Teste seus conhecimentos ecológicos e desafie seus reflexos na triagem de resíduos em ritmo acelerado!</p>
+            
+            <div class="form-group">
+                <label for="username">Seu Nome / Apelido:</label>
+                <input type="text" id="username" placeholder="Ex: EcoGuerreiro" maxlength="15">
+            </div>
+
+            <div class="form-group">
+                <label>Escolha seu Mascote:</label>
+                <div class="avatar-grid">
+                    <div class="avatar-card selected" onclick="selectAvatar('🐢', 'Tartaruga', this)">
+                        <span class="avatar-icon">🐢</span>
+                        <span class="avatar-name">Tartaruga</span>
+                    </div>
+                    <div class="avatar-card" onclick="selectAvatar('🐬', 'Golfinho', this)">
+                        <span class="avatar-icon">🐬</span>
+                        <span class="avatar-name">Golfinho</span>
+                    </div>
+                    <div class="avatar-card" onclick="selectAvatar('🐳', 'Baleia', this)">
+                        <span class="avatar-icon">🐳</span>
+                        <span class="avatar-name">Baleia</span>
+                    </div>
+                    <div class="avatar-card" onclick="selectAvatar('🐙', 'Polvo', this)">
+                        <span class="avatar-icon">🐙</span>
+                        <span class="avatar-name">Polvo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button class="btn" id="btn-start">Iniciar Desafio 🚀</button>
+            <button class="btn btn-sec" id="btn-rank-start">Ver Ranking Local 🏆</button>
+        </div>
+    </div>
+
+    <!-- 2. TELA DO QUIZ (EDUCATIVO) -->
+    <div id="s-quiz" class="screen">
+        <div>
+            <div class="quiz-header">
+                <span id="q-num">Pergunta 1 de 10</span>
+                <div class="user-badge">
+                    <span id="u-avatar">🐢</span>
+                    <span id="u-tag">@Jogador</span>
+                </div>
+            </div>
+            
+            <div class="progress-bg"><div id="p-bar" class="progress-fill"></div></div>
+            
+            <div id="q-title" class="question-title">Carregando pergunta...</div>
+            <div id="opts-box" class="options-container"></div>
+            
+            <div id="fb-box" class="feedback-card">
+                <div id="fb-pts" class="feedback-pts">+0 Pontos!</div>
+                <p id="fb-msg" class="feedback-text">Explicação...</p>
+            </div>
+        </div>
+
+        <button class="btn" id="btn-next" style="display: none;">Próxima Pergunta ➡️</button>
+    </div>
+
+    <!-- 3. TELA DE REGRAS DO MINI-GAME -->
+    <div id="s-mini-intro" class="screen" style="text-align: center;">
+        <div>
+            <h2 style="color: #0d5c56;">⚡ Fase Arcade: Triagem Veloz!</h2>
+            <p>A velocidade aumenta a cada acerto! Separe os resíduos na lixeira correta antes que o tempo de cada item acabe.</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; padding: 12px; margin-bottom: 16px; text-align: left; font-size: 12px; color: #334155;">
+                <div style="margin-bottom: 6px;">🔥 <b>Combos:</b> Manter acertos seguidos multiplica seus pontos em até <b>4x</b>!</div>
+                <div style="margin-bottom: 6px;">⚡ <b>Dificuldade:</b> O tempo por item encolhe a cada acerto!</div>
+                <div>🔴 <b>Erros ou estouro de tempo:</b> Quebram o combo e perdem pontos!</div>
+            </div>
+        </div>
+
+        <button class="btn" id="btn-start-mini">Começar Triagem! ⏱️</button>
+    </div>
+
+    <!-- 4. TELA DO MINI-GAME ARCADE DE TRIAGEM -->
+    <div id="s-mini" class="screen">
+        <div>
+            <div class="arcade-hud">
+                <div class="hud-box">
+                    <div class="hud-label">Tempo Geral</div>
+                    <div class="hud-val" id="mini-timer">30s</div>
+                </div>
+                <div class="hud-box">
+                    <div class="hud-label">Combo Multiplicador</div>
+                    <div class="hud-val" id="mini-combo-val">1x</div>
+                </div>
+                <div class="hud-box">
+                    <div class="hud-label">Pontos Bônus</div>
+                    <div class="hud-val" id="mini-score-val" style="color: #11998e;">0</div>
+                </div>
+            </div>
+
+            <div class="item-timer-bg">
+                <div id="item-timer-bar" class="item-timer-fill"></div>
+            </div>
+
+            <div class="waste-card" id="waste-card">
+                <span id="waste-icon" class="waste-icon">🍾</span>
+                <div id="waste-name" class="waste-name">Garrafa de Vidro</div>
+                <div id="waste-hint" class="waste-hint">Selecione a lixeira correta!</div>
+            </div>
+
+            <div class="bins-grid">
+                <button class="bin-btn bin-plastic" onclick="checkSorting('plastic')">
+                    <span>🔴</span> PLÁSTICO
+                </button>
+                <button class="bin-btn bin-paper" onclick="checkSorting('paper')">
+                    <span>🔵</span> PAPEL
+                </button>
+                <button class="bin-btn bin-glass" onclick="checkSorting('glass')">
+                    <span>🟢</span> VIDRO
+                </button>
+                <button class="bin-btn bin-metal" onclick="checkSorting('metal')">
+                    <span>🟡</span> METAL
+                </button>
+                <button class="bin-btn bin-organic" onclick="checkSorting('organic')">
+                    <span>🟤</span> ORGÂNICO
+                </button>
+                <button class="bin-btn bin-special" onclick="checkSorting('special')">
+                    <span>🟣</span> ESPECIAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. TELA DE RESULTADO & BADGES -->
+    <div id="s-res" class="screen">
+        <div>
+            <div class="score-header">
+                <div class="score-circle">
+                    <span id="f-score">0</span>
+                    <span style="font-size: 9px; font-weight: 700;">PTS TOTAL</span>
+                </div>
+                <h2 id="b-title">Resultado</h2>
+                <p id="b-desc">Analisando seu desempenho...</p>
+            </div>
+
+            <div class="badges-section">
+                <div class="badges-title">🏅 MEDALHAS CONQUISTADAS</div>
+                <div class="badges-grid">
+                    <div id="badge-bag" class="badge-card">
+                        <span class="badge-icon">🛍️</span>
+                        <div class="badge-info">
+                            <div class="badge-name">Mestre Eco</div>
+                            <div class="badge-desc">Excelente no Quiz</div>
+                        </div>
+                    </div>
+                    <div id="badge-combo" class="badge-card">
+                        <span class="badge-icon">🔥</span>
+                        <div class="badge-info">
+                            <div class="badge-name">Rei do Combo</div>
+                            <div class="badge-desc">Combo 5x na Triagem</div>
+                        </div>
+                    </div>
+                    <div id="badge-speed" class="badge-card">
+                        <span class="badge-icon">⚡</span>
+                        <div class="badge-info">
+                            <div class="badge-name">Mão Rápida</div>
+                            <div class="badge-desc">+300 Pts na Triagem</div>
+                        </div>
+                    </div>
+                    <div id="badge-ocean" class="badge-card">
+                        <span class="badge-icon">🌊</span>
+                        <div class="badge-info">
+                            <div class="badge-name">Guardião do Mar</div>
+                            <div class="badge-desc">Pontuação Alta Geral</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" id="btn-save">Salvar no Ranking Local 🏆</button>
+    </div>
+
+    <!-- 6. TELA DE RANKING LOCAL -->
+    <div id="s-rank" class="screen">
+        <div>
+            <h2>🏆 Ranking Local</h2>
+            <p>Maiores pontuações salvas neste dispositivo:</p>
+            
+            <div id="rank-list" class="ranking-list"></div>
+        </div>
+        
+        <button class="btn" id="btn-restart">Jogar Novamente 🔄</button>
+    </div>
+
+</div>
+
+<script>
+    /* BANCO DE DADOS EXPANSO DE RESÍDUOS (20 ITENS) */
+    var wasteDatabase = [
+        { name: "Garrafa PET", icon: "🧴", type: "plastic" },
+        { name: "Sacola Plástica", icon: "🛍️", type: "plastic" },
+        { name: "Copo Descartável", icon: "🥤", type: "plastic" },
+        { name: "Embalagem de Salgadinho", icon: "🍿", type: "plastic" },
+        { name: "Pote de Iogurte", icon: "🧃", type: "plastic" },
+        
+        { name: "Jornal Velho", icon: "📰", type: "paper" },
+        { name: "Caixa de Papelão", icon: "📦", type: "paper" },
+        { name: "Revista", icon: "📖", type: "paper" },
+        { name: "Papel de Escritório", icon: "📄", type: "paper" },
+
+        { name: "Garrafa de Vidro", icon: "🍾", type: "glass" },
+        { name: "Pote de Geleia", icon: "🫙", type: "glass" },
+        { name: "Copo de Vidro Quebrado", icon: "🥃", type: "glass" },
+
+        { name: "Lata de Refrigerante", icon: "🥤", type: "metal" },
+        { name: "Lata de Conserva", icon: "🥫", type: "metal" },
+        { name: "Tampinha de Garrafa", icon: "🪙", type: "metal" },
+
+        { name: "Casca de Banana", icon: "🍌", type: "organic" },
+        { name: "Restos de Maçã", icon: "🍎", type: "organic" },
+        { name: "Borra de Café", icon: "☕", type: "organic" },
+
+        { name: "Bateria / Pilha", icon: "🔋", type: "special" },
+        { name: "Lâmpada Queimada", icon: "💡", type: "special" },
+        { name: "Celular Antigo", icon: "📱", type: "special" }
+    ];
+
+    /* BANCO DE DADOS DO QUIZ */
+    var quizQuestions = [
+        { q: "Como você costuma comprar hortifrúti no supermercado?", opts: [{ txt: "Uso sacolas plásticas transparentes para cada item.", pts: 10, fb: "Sacolinhas de hortifrúti são de uso único e raramente são recicladas." }, { txt: "Às vezes levo ecobag, mas coloco vegetais em sacos plásticos.", pts: 20, fb: "Um bom começo! Dá para eliminar os saquinhos internos pesando os vegetais soltos." }, { txt: "Levo ecobags e peso os vegetais soltos ou em saquinhos de pano.", pts: 30, fb: "Excelente! Você evita o plástico de uso único antes de ser gerado." }] },
+        { q: "Qual é o seu hábito para beber água ou café fora de casa?", opts: [{ txt: "Compro garrafas PET descartáveis e uso copos de plástico.", pts: 10, fb: "Garrafas PET e copos descartáveis são os maiores vilões do descarte diário." }, { txt: "Tenho garrafa em casa, mas com frequência esquecendo compro PET.", pts: 20, fb: "Quase lá! Criar o hábito de checar a garrafa reduz muito seu descarte." }, { txt: "Carrego minha garrafa inox/copo reutilizável para todo canto.", pts: 30, fb: "Perfeito! Você evita descartar centenas de garrafas/copos por ano." }] },
+        { q: "Ao pedir delivery de refeições, o que você faz sobre descartáveis?", opts: [{ txt: "Esqueço de recusar; vem talheres, canudos e marmitas.", pts: 10, fb: "O delivery acumula muito plástico descartável desnecessário." }, { txt: "Peço para não enviarem talheres, mas não reparo na embalagem.", pts: 20, fb: "Muito bem! Recusar os talheres plásticos já é uma grande vitória." }, { txt: "Recuso talheres/canudos e dou preferência a embalagens sustentáveis.", pts: 30, fb: "Show! Além de recusar, você incentiva restaurantes verdes." }] },
+        { q: "Como é o consumo de itens de limpeza e higiene na sua casa?", opts: [{ txt: "Compro frascos plásticos tradicionais de tamanho pequeno.", pts: 10, fb: "Comprar frascos pequenos aumenta o volume de plástico rígido no lixo." }, { txt: "Compro embalagens formato 'refil' econômico às vezes.", pts: 20, fb: "O refil utiliza até 80% menos plástico que um frasco rígido novo." }, { txt: "Utilizo produtos em refil concentrado, cosméticos em barra ou a granel.", pts: 30, fb: "Incrível! Cosméticos sólidos e refis concentrados evitam frascos novos." }] },
+        { q: "Como é feita a destinação do plástico reciclável na sua casa?", opts: [{ txt: "Misturo no lixo comum e raramente separo.", pts: 10, fb: "Plásticos no lixo comum levam centenas de anos para se decompor em aterros." }, { txt: "Separo para a Coleta Seletiva, mas sem lavar os resíduos.", pts: 20, fb: "Bom hábito, mas resíduos engordurados podem contaminar o lote reciclável." }, { txt: "Lavo os resíduos, separo corretamente e entrego limpos.", pts: 30, fb: "Exemplar! Higienizar o reciclável garante o aproveitamento pelas cooperativas." }] }
+    ];
+
+    /* ESTADO GLOBAL DO JOGO */
+    var selectedAvatarIcon = '🐢';
+    var selectedAvatarName = 'Tartaruga';
+    var userName = 'Anônimo';
+
+    var quizScore = 0;
+    var currentQIndex = 0;
+    var currentQList = [];
+    var tempQuizPts = 0;
+
+    var miniScore = 0;
+    var miniTimer = 30;
+    var miniStreak = 0;
+    var maxStreak = 0;
+    var currentWaste = null;
+
+    var mainGameInterval = null;
+    var itemTimerInterval = null;
+    var itemTimeLeft = 100; // Porcentagem
+    var baseItemDuration = 2500; // ms base por item
+    var currentItemDuration = 2500;
+
+    /* NAVEGAÇÃO DE TELAS */
+    function setScreen(id) {
+        var screens = document.querySelectorAll('.screen');
+        for (var i = 0; i < screens.length; i++) { 
+            screens[i].classList.remove('active'); 
+        }
+        var activeScreen = document.getElementById(id);
+        activeScreen.classList.add('active');
+    }
+
+    /* SELEÇÃO DE AVATAR */
+    function selectAvatar(icon, name, element) {
+        selectedAvatarIcon = icon;
+        selectedAvatarName = name;
+        var cards = document.querySelectorAll('.avatar-card');
+        for (var i = 0; i < cards.length; i++) { cards[i].classList.remove('selected'); }
+        element.classList.add('selected');
+    }
+
+    /* EMBARALHADOR */
+    function shuffle(arr) {
+        var a = JSON.parse(JSON.stringify(arr));
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+    }
+
+    /* INICIAR QUIZ */
+    function startQuiz() {
+        var nameInput = document.getElementById('username').value;
+        if (!nameInput || nameInput.trim() === '') {
+            alert('Por favor, digite seu nome ou apelido!');
+            return;
+        }
+        userName = nameInput.trim();
+        document.getElementById('u-tag').innerText = '@' + userName;
+        document.getElementById('u-avatar').innerText = selectedAvatarIcon;
+
+        currentQList = shuffle(quizQuestions);
+        for (var i = 0; i < currentQList.length; i++) {
+            currentQList[i].opts = shuffle(currentQList[i].opts);
+        }
+
+        quizScore = 0;
+        currentQIndex = 0;
+        loadQuestion();
+        setScreen('s-quiz');
+    }
+
+    function loadQuestion() {
+        var q = currentQList[currentQIndex];
+        document.getElementById('q-num').innerText = 'Pergunta ' + (currentQIndex + 1) + ' de ' + currentQList.length;
+        document.getElementById('q-title').innerText = (currentQIndex + 1) + '. ' + q.q;
+        document.getElementById('p-bar').style.width = ((currentQIndex / currentQList.length) * 100) + '%';
+        document.getElementById('fb-box').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'none';
+
+        var box = document.getElementById('opts-box');
+        box.innerHTML = '';
+
+        for (var i = 0; i < q.opts.length; i++) {
+            (function(idx) {
+                var o = q.opts[idx];
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = o.txt;
+                btn.onclick = function() { chooseOption(idx, o.pts, o.fb); };
+                box.appendChild(btn);
+            })(i);
+        }
+    }
+
+    function chooseOption(idx, pts, fb) {
+        tempQuizPts = pts;
+        var btns = document.querySelectorAll('.option-btn');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = true;
+            if (i === idx) btns[i].classList.add('selected');
+        }
+        document.getElementById('fb-pts').innerText = '+' + pts + ' Pontos!';
+        document.getElementById('fb-msg').innerText = fb;
+        document.getElementById('fb-box').style.display = 'block';
+        document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function advanceQuestion() {
+        quizScore += tempQuizPts;
+        currentQIndex++;
+        if (currentQIndex < currentQList.length) {
+            loadQuestion();
+        } else {
+            setScreen('s-mini-intro');
+        }
+    }
+
+    /* MINI-GAME ARCADE PROGRESSIVO */
+    function startMiniGame() {
+        miniScore = 0;
+        miniTimer = 30;
+        miniStreak = 0;
+        maxStreak = 0;
+        currentItemDuration = baseItemDuration;
+
+        updateHUD();
+        setScreen('s-mini');
+        nextWasteItem();
+
+        // Timer Geral do Jogo
+        clearInterval(mainGameInterval);
+        mainGameInterval = setInterval(function() {
+            miniTimer--;
+            document.getElementById('mini-timer').innerText = miniTimer + 's';
+            if (miniTimer <= 0) {
+                endMiniGame();
+            }
+        }, 1000);
+    }
+
+    function updateHUD() {
+        var multiplier = Math.min(4, 1 + Math.floor(miniStreak / 3));
+        document.getElementById('mini-score-val').innerText = miniScore;
+        document.getElementById('mini-combo-val').innerHTML = multiplier + 'x ' + (miniStreak > 2 ? '<span class="combo-badge">COMBO</span>' : '');
+    }
+
+    function nextWasteItem() {
+        clearInterval(itemTimerInterval);
+
+        // Seleção aleatória sem repetir o atual
+        var available = wasteDatabase.filter(function(w) { return !currentWaste || w.name !== currentWaste.name; });
+        currentWaste = available[Math.floor(Math.random() * available.length)];
+
+        var card = document.getElementById('waste-card');
+        card.classList.remove('shake', 'pop');
+        void card.offsetWidth; // Trigger reflow
+        card.classList.add('pop');
+
+        document.getElementById('waste-icon').innerText = currentWaste.icon;
+        document.getElementById('waste-name').innerText = currentWaste.name;
+
+        // Dificuldade Progressiva: Diminui o tempo disponível por item conforme o streak aumenta
+        currentItemDuration = Math.max(1000, baseItemDuration - (miniStreak * 120));
+        itemTimeLeft = 100;
+        
+        var timerBar = document.getElementById('item-timer-bar');
+        timerBar.style.width = '100%';
+
+        var intervalTick = 50;
+        var step = (intervalTick / currentItemDuration) * 100;
+
+        itemTimerInterval = setInterval(function() {
+            itemTimeLeft -= step;
+            if (itemTimeLeft <= 0) {
+                timerBar.style.width = '0%';
+                onItemTimeout();
+            } else {
+                timerBar.style.width = itemTimeLeft + '%';
+            }
+        }, intervalTick);
+    }
+
+    function checkSorting(type) {
+        clearInterval(itemTimerInterval);
+        
+        if (type === currentWaste.type) {
+            // Acerto!
+            miniStreak++;
+            if (miniStreak > maxStreak) maxStreak = miniStreak;
+
+            var multiplier = Math.min(4, 1 + Math.floor(miniStreak / 3));
+            var pointsGained = 10 * multiplier;
+            miniScore += pointsGained;
+
+            showFloatingText('+' + pointsGained, '#22c55e');
+            updateHUD();
+            nextWasteItem();
+        } else {
+            // Erro!
+            miniStreak = 0;
+            miniScore = Math.max(0, miniScore - 5);
+            
+            var card = document.getElementById('waste-card');
+            card.classList.add('shake');
+
+            showFloatingText('-5', '#ef4444');
+            updateHUD();
+            setTimeout(nextWasteItem, 300);
+        }
+    }
+
+    function onItemTimeout() {
+        clearInterval(itemTimerInterval);
+        miniStreak = 0;
+        miniScore = Math.max(0, miniScore - 5);
+
+        var card = document.getElementById('waste-card');
+        card.classList.add('shake');
+
+        showFloatingText('Tempo Esgotado! -5', '#ef4444');
+        updateHUD();
+        setTimeout(nextWasteItem, 300);
+    }
+
+    function showFloatingText(txt, color) {
+        var card = document.getElementById('waste-card');
+        var floatEl = document.createElement('div');
+        floatEl.className = 'float-score';
+        floatEl.innerText = txt;
+        floatEl.style.color = color;
+        floatEl.style.left = (card.offsetLeft + card.offsetWidth / 2 - 30) + 'px';
+        floatEl.style.top = (card.offsetTop + 10) + 'px';
+        
+        document.getElementById('s-mini').appendChild(floatEl);
+        setTimeout(function() { floatEl.remove(); }, 800);
+    }
+
+    function endMiniGame() {
+        clearInterval(mainGameInterval);
+        clearInterval(itemTimerInterval);
+
+        var totalScore = quizScore + miniScore;
+        document.getElementById('f-score').innerText = totalScore;
+
+        var title = "", desc = "";
+        if (totalScore >= 350) {
+            title = "🟢 Campeão Ecológico!";
+            desc = "Espetacular! Você demonstrou consciência ambiental exemplar e reflexos de nível profissional na reciclagem!";
+        } else if (totalScore >= 200) {
+            title = "🟡 Consumidor Consciente";
+            desc = "Muito bem! Você tem bons hábitos ecológicos, mas pode agilizar ainda mais sua separação de resíduos.";
+        } else {
+            title = "🔴 Aprendiz Ecológico";
+            desc = "Um bom começo! Continue praticando para reduzir seus descartáveis e aprimorar a triagem rápida.";
+        }
+
+        document.getElementById('b-title').innerText = title;
+        document.getElementById('b-desc').innerText = desc;
+
+        // Atualizar Badges
+        setBadge('badge-bag', quizScore >= 120);
+        setBadge('badge-combo', maxStreak >= 5);
+        setBadge('badge-speed', miniScore >= 300);
+        setBadge('badge-ocean', totalScore >= 300);
+
+        setScreen('s-res');
+    }
+
+    function setBadge(id, unlocked) {
+        var el = document.getElementById(id);
+        if (unlocked) {
+            el.classList.add('unlocked');
+        } else {
+            el.classList.remove('unlocked');
+        }
+    }
+
+    /* SALVAR E EXIBIR RANKING LOCAL */
+    function saveRanking() {
+        var totalScore = quizScore + miniScore;
+        var rankData = JSON.parse(localStorage.getItem('ecoRankData_v3') || '[]');
+        
+        rankData.push({
+            name: userName,
+            avatar: selectedAvatarIcon,
+            score: totalScore
+        });
+
+        rankData.sort(function(a, b) { return b.score - a.score; });
+        rankData = rankData.slice(0, 10);
+
+        localStorage.setItem('ecoRankData_v3', JSON.stringify(rankData));
+        showRanking();
+    }
+
+    function showRanking() {
+        var rankData = JSON.parse(localStorage.getItem('ecoRankData_v3') || '[]');
+        var list = document.getElementById('rank-list');
+        list.innerHTML = '';
+
+        if (rankData.length === 0) {
+            list.innerHTML = '<p style="text-align:center; padding:12px;">Nenhuma pontuação registrada ainda.</p>';
+        } else {
+            for (var i = 0; i < rankData.length; i++) {
+                var item = document.createElement('div');
+                item.className = 'ranking-item' + (i === 0 ? ' top-1' : '');
+                item.innerHTML = '<div class="rank-user"><span>#' + (i + 1) + '</span> <span>' + rankData[i].avatar + '</span> <b>' + rankData[i].name + '</b></div><b>' + rankData[i].score + ' pts</b>';
+                list.appendChild(item);
+            }
+        }
+        setScreen('s-rank');
+    }
+
+    function resetGame() {
+        document.getElementById('username').value = '';
+        setScreen('s-start');
+    }
+
+    /* INICIALIZAÇÃO */
+    window.onload = function() {
+        document.getElementById('btn-start').onclick = startQuiz;
+        document.getElementById('btn-rank-start').onclick = showRanking;
+        document.getElementById('btn-next').onclick = advanceQuestion;
+        document.getElementById('btn-start-mini').onclick = startMiniGame;
+        document.getElementById('btn-save').onclick = saveRanking;
+        document.getElementById('btn-restart').onclick = resetGame;
+    };
+</script>
+</body>
+</html>
