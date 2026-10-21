@@ -48,7 +48,6 @@
         .timer-kahoot-fill { height: 100%; width: 100%; background: #f39c12; transition: width 0.1s linear; }
         .waste-card { background: #f8f9fa; border: 3px solid #e9ecef; border-radius: 16px; padding: 20px; font-size: 50px; margin-bottom: 15px; position: relative; }
         .waste-card.gold { border-color: #f1c40f; background: #fef9e7; animation: pulse 1s infinite; }
-        .waste-card.mystery { background: #34495e; color: #fff; }
         .waste-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 5px; }
         
         .bin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -108,11 +107,11 @@
         </div>
 
         <button class="btn" id="btn-start-quiz">Modo Quiz + Arcade 🚀</button>
-        <button class="btn btn-inf" id="btn-start-inf">Modo Infinito (Sobrevivência) ⏱️</button>
+        <button class="btn btn-inf" id="btn-start-inf">Modo Infinito (Morte Sólida) 💀</button>
         <button class="btn btn-sec" id="btn-rank-start">Ver Rankings 🏆</button>
     </div>
 
-    <!-- 2. TELA DO QUIZ (10 PERGUNTAS) -->
+    <!-- 2. TELA DO QUIZ (10 PERGUNTAS COM 3 OPÇÕES) -->
     <div id="s-quiz" class="screen">
         <div class="header-info">
             <span id="q-num">Pergunta 1/10</span>
@@ -199,10 +198,16 @@
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.25);
             } else if (type === 'wrong') {
-                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(140, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'fatal') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
             } else if (type === 'combo') {
                 osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
                 osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08);
@@ -231,7 +236,6 @@
     var comboCount = 0;
     var currentRankTab = 'norm';
 
-    // 24 RESÍDUOS PARA AS 6 LIXEIRAS
     var wasteList = [
         { name: "Garrafa PET", type: "plastic", icon: "🍾" },
         { name: "Saco Plástico", type: "plastic", icon: "🛍️" },
@@ -264,18 +268,58 @@
         { name: "Espelho Quebrado", type: "nonrec", icon: "🪞" }
     ];
 
-    // 10 PERGUNTAS COMPLETAS
+    // 10 PERGUNTAS COM 3 OPÇÕES DE RESPOSTA
     var quizData = [
-        { q: "Como você costuma comprar hortifrúti no supermercado?", opts: [{ txt: "Uso sacolas plásticas transparentes para cada item.", pts: 1, fb: "Sacolinhas de hortifrúti são de uso único e raramente recicladas." }, { txt: "Levo ecobag e peso os vegetais soltos.", pts: 3, fb: "Excelente! Você evita o plástico descartável na fonte." }] },
-        { q: "Qual o seu hábito ao beber água fora de casa?", opts: [{ txt: "Compro garrafas PET descartáveis.", pts: 1, fb: "Garrafas PET são um dos maiores poluentes dos oceanos." }, { txt: "Carrego minha própria garrafa reutilizável.", pts: 3, fb: "Perfeito! Economiza dinheiro e evita resíduos." }] },
-        { q: "O que faz sobre talheres e canudos ao pedir delivery?", opts: [{ txt: "Esqueço de recusar; vem tudo de plástico.", pts: 1, fb: "Talheres de delivery viram lixo em minutos." }, { txt: "Peço explicitamente para não enviarem descartáveis.", pts: 3, fb: "Muito bem! Use os talheres laváveis da sua casa." }] },
-        { q: "Como é o consumo de itens de limpeza/higiene na sua casa?", opts: [{ txt: "Compro sempre frascos plásticos pequenos.", pts: 1, fb: "Frascos pequenos geram um volume maior de plástico." }, { txt: "Priorizo embalagens refil ou produtos em barra.", pts: 3, fb: "Incrível! Refis usam até 80% menos plástico." }] },
-        { q: "Como destina os resíduos plásticos na sua residência?", opts: [{ txt: "Misturo no lixo comum sem separar.", pts: 1, fb: "Plásticos no lixo comum vão para aterros por séculos." }, { txt: "Lavo e separo para a Coleta Seletiva.", pts: 3, fb: "Exemplar! A reciclagem gera renda para cooperativas." }] },
-        { q: "Em festas e eventos, qual é a sua atitude?", opts: [{ txt: "Uso vários copos plásticos descartáveis.", pts: 1, fb: "Em poucas horas um único evento gera centenas de copos de lixo." }, { txt: "Levo meu próprio copo reutilizável.", pts: 3, fb: "Nota 10! Um eco-copo evita dezenas de descartáveis." }] },
-        { q: "O que faz com as esponjas de lavar louça amarelas?", opts: [{ txt: "Uso e troco semanalmente no lixo comum.", pts: 1, fb: "Esponjas sintéticas soltam microplásticos pelo ralo." }, { txt: "Substituo por bucha vegetal biodegradável.", pts: 3, fb: "Sensacional! A bucha vegetal é 100% compostável." }] },
-        { q: "Qual a sua preferência na hora de comprar roupas?", opts: [{ txt: "Compro tecidos sintéticos (poliéster/nylon) sem verificar.", pts: 1, fb: "Sintéticos soltam microfibras de plástico na lavagem." }, { txt: "Dou preferência a algodão e fibras naturais.", pts: 3, fb: "Ótimo! Fibras naturais protegem os oceanos." }] },
-        { q: "O que faz com embalagens de congelados e pratos prontos?", opts: [{ txt: "Consumo diariamente pratos em bandejas pretas.", pts: 1, fb: "Bandejas pretas são difíceis de identificar nos triadores." }, { txt: "Cozinho e guardo em potes de vidro.", pts: 3, fb: "Excelente! Vidro dura muito e não contamina o alimento." }] },
-        { q: "Qual a sua atitude sobre canudos e tampas plásticas?", opts: [{ txt: "Uso sem pensar em bebidas geladas e cafés.", pts: 1, fb: "Acessórios pequenos escapam da coleta e vão ao mar." }, { txt: "Recuso canudos e tampas descartáveis.", pts: 3, fb: "Atitude nota 1000! Recusar é o pilar mais importante." }] }
+        { q: "Como você costuma comprar hortifrúti no supermercado?", opts: [
+            { txt: "Uso sacolas plásticas transparentes para cada item.", pts: 1, fb: "Sacolinhas são de uso único e difíceis de reciclar." },
+            { txt: "Junto alguns itens na mesma sacola quando possível.", pts: 2, fb: "Reduz um pouco, mas ainda gera plásticos desnecessários." },
+            { txt: "Levo minhas próprias ecobags e pesarei os vegetais soltos.", pts: 3, fb: "Excelente! Evita plástico descartável diretamente na fonte." }
+        ]},
+        { q: "Qual é o seu hábito principal ao beber água fora de casa?", opts: [
+            { txt: "Compro garrafas PET descartáveis sem pensar.", pts: 1, fb: "Garrafas PET são um dos maiores poluentes nos oceanos." },
+            { txt: "Uso copos plásticos descartáveis dos bebedouros.", pts: 2, fb: "Gera um alto volume diário de resíduos não reciclados." },
+            { txt: "Trago sempre minha garrafa reutilizável cheia de casa.", pts: 3, fb: "Perfeito! Economiza dinheiro e não gera lixo." }
+        ]},
+        { q: "O que você faz ao pedir comida por aplicativo (delivery)?", opts: [
+            { txt: "Aceito talheres, sachês e canudos plásticos.", pts: 1, fb: "Talheres descartáveis viram lixo em questão de minutos." },
+            { txt: "Guardo os talheres plásticos em uma gaveta para usar depois.", pts: 2, fb: "Boa intenção, mas acumula plástico desnecessário." },
+            { txt: "Marco a opção de NÃO enviar talheres nem canudos plásticos.", pts: 3, fb: "Muito bem! Use seus próprios talheres laváveis." }
+        ]},
+        { q: "Como é o consumo de produtos de limpeza e higiene na sua casa?", opts: [
+            { txt: "Compro sempre embalagens plásticas pequenas e descartáveis.", pts: 1, fb: "Frascos pequenos geram um volume proporcionalmente maior de resíduos." },
+            { txt: "Procuro comprar embalagens de tamanho família.", pts: 2, fb: "Otimiza a quantidade de plástico, mas ainda gera resíduo." },
+            { txt: "Priorizo embalagens refil concentradas ou produtos em barra.", pts: 3, fb: "Incrível! Produtos refil reduzem até 80% do plástico." }
+        ]},
+        { q: "Como você destina os resíduos plásticos produzidos na sua residência?", opts: [
+            { txt: "Jogo tudo junto no lixo comum descartável.", pts: 1, fb: "Plásticos no lixo comum acabam em aterros por séculos." },
+            { txt: "Separo o plástico, mas não lavo as embalagens engorduradas.", pts: 2, fb: "Restos de alimento dificultam o trabalho de reciclagem." },
+            { txt: "Enxáguo rapidamente e destino para a Coleta Seletiva.", pts: 3, fb: "Exemplar! A reciclagem limpa gera renda para cooperativas." }
+        ]},
+        { q: "Em festas, passeios ou eventos sociais, qual é a sua postura?", opts: [
+            { txt: "Uso um copo plástico descartável novo a cada bebida.", pts: 1, fb: "Um único evento pode produzir centenas de copos de lixo." },
+            { txt: "Escrevo meu nome em um copo plástico e uso ele a festa toda.", pts: 2, fb: "Ainda é um plástico descartável, mas já reduz o impacto." },
+            { txt: "Levo meu próprio eco-copo de silicone ou rígido na bolsa/mochila.", pts: 3, fb: "Nota 10! Seu hábito previne diretamente o lixo." }
+        ]},
+        { q: "Qual material você utiliza para lavar a louça do dia a dia?", opts: [
+            { txt: "Esponja sintética tradicional (amarela e verde).", pts: 1, fb: "Esponjas sintéticas soltam microplásticos pelo ralo e não reciclam." },
+            { txt: "Uso a esponja sintética até ela se desmanchar por completo.", pts: 2, fb: "Evita o descarte precoce, mas solta microplásticos." },
+            { txt: "Utilizo bucha vegetal natural ou escovas de madeira/massa.", pts: 3, fb: "Sensacional! A bucha vegetal é 100% compostável." }
+        ]},
+        { q: "Qual a sua atitude ao comprar roupas e vestuário?", opts: [
+            { txt: "Compro tecidos sintéticos (poliéster/nylon) sem observar a etiqueta.", pts: 1, fb: "Sintéticos soltam microfibras sintéticas na lavagem." },
+            { txt: "Compro mistos e lavo roupas sintéticas dentro de sacos de proteção.", pts: 2, fb: "O saco retém parte dos microplásticos na lavagem." },
+            { txt: "Priorizo fibras naturais como algodão, linho e tecidos orgânicos.", pts: 3, fb: "Ótimo! Fibras naturais não poluem os oceanos." }
+        ]},
+        { q: "O que faz com embalagens de pratos prontos e marmitas?", opts: [
+            { txt: "Consumo refeições em recipientes de isopor ou plástico preto diariamente.", pts: 1, fb: "Isopor e plásticos pretos são extremamente difíceis de reciclar." },
+            { txt: "Compro marmitas em embalagens de alumínio descartáveis.", pts: 2, fb: "O alumínio recicla fácil, mas ainda gera resíduo descartável." },
+            { txt: "Cozinho e armazeno minhas refeições em potes de vidro reutilizáveis.", pts: 3, fb: "Excelente! Vidro dura muitos anos e não contamina a comida." }
+        ]},
+        { q: "Qual é a sua atitude sobre pequenos acessórios (tampas/canudos)?", opts: [
+            { txt: "Uso canudos plásticos e tampas em todas as bebidas que consumo.", pts: 1, fb: "Acessórios pequenos escapam da triagem e vão parar nos oceanos." },
+            { txt: "Troquei os canudos plásticos pelos canudos de papel descartáveis.", pts: 2, fb: "Canudos de papel reduzem o plástico, mas ainda são descartáveis." },
+            { txt: "Recuso o uso de canudos e tampas, bebendo direto no copo.", pts: 3, fb: "Atitude excelente! Recusar é o R mais eficiente da sustentabilidade." }
+        ]}
     ];
 
     function selectMascot(id, el) {
@@ -354,19 +398,18 @@
         comboCount = 0;
         
         if (isInfiniteMode) {
-            globalTimeLeft = 60;
-            document.getElementById('arc-mode-title').innerText = "Modo Infinito";
+            document.getElementById('arc-mode-title').innerText = "Modo Infinito (Morte Sólida)";
+            document.getElementById('arc-global-timer').innerText = "🚀 Sobrevivência";
         } else {
             globalTimeLeft = 30;
             document.getElementById('arc-mode-title').innerText = "Arcade Rápido";
+            clearInterval(arcadeTimer);
+            arcadeTimer = setInterval(function() {
+                globalTimeLeft--;
+                document.getElementById('arc-global-timer').innerText = '⏱️ ' + globalTimeLeft + 's';
+                if (globalTimeLeft <= 0) { endArcade(); }
+            }, 1000);
         }
-
-        clearInterval(arcadeTimer);
-        arcadeTimer = setInterval(function() {
-            globalTimeLeft--;
-            document.getElementById('arc-global-timer').innerText = '⏱️ ' + globalTimeLeft + 's';
-            if (globalTimeLeft <= 0) { endArcade(); }
-        }, 1000);
 
         nextArcadeItem();
     }
@@ -376,13 +419,12 @@
         currentItem = wasteList[Math.floor(Math.random() * wasteList.length)];
         
         var isGold = Math.random() < 0.2;
-        var isMystery = Math.random() < 0.15 && !isGold;
 
         var card = document.getElementById('waste-card');
-        card.className = 'waste-card' + (isGold ? ' gold' : '') + (isMystery ? ' mystery' : '');
+        card.className = 'waste-card' + (isGold ? ' gold' : '');
         
-        document.getElementById('w-icon').innerText = isMystery ? '❓' : currentItem.icon;
-        document.getElementById('w-name').innerText = isMystery ? 'Resíduo Oculto' : currentItem.name;
+        document.getElementById('w-icon').innerText = currentItem.icon;
+        document.getElementById('w-name').innerText = currentItem.name;
 
         currentItem.isGold = isGold;
         itemTimeLeft = 7.5;
@@ -391,10 +433,15 @@
             itemTimeLeft -= 0.1;
             document.getElementById('item-timer-bar').style.width = Math.max(0, ((itemTimeLeft / 7.5) * 100)) + '%';
             if (itemTimeLeft <= 0) {
-                playSound('wrong');
-                comboCount = 0;
-                updateComboTag();
-                nextArcadeItem();
+                if (isInfiniteMode) {
+                    playSound('fatal');
+                    endArcade();
+                } else {
+                    playSound('wrong');
+                    comboCount = 0;
+                    updateComboTag();
+                    nextArcadeItem();
+                }
             }
         }, 100);
     }
@@ -409,14 +456,19 @@
 
             totalScore += Math.max(100, pointsEarned);
             playSound(comboCount >= 3 ? 'combo' : 'correct');
-
-            if (isInfiniteMode) { globalTimeLeft += 1; }
+            updateComboTag();
+            nextArcadeItem();
         } else {
-            playSound('wrong');
-            comboCount = 0;
+            if (isInfiniteMode) {
+                playSound('fatal');
+                endArcade();
+            } else {
+                playSound('wrong');
+                comboCount = 0;
+                updateComboTag();
+                nextArcadeItem();
+            }
         }
-        updateComboTag();
-        nextArcadeItem();
     }
 
     function updateComboTag() {
