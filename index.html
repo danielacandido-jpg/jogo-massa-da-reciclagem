@@ -6,77 +6,8 @@
     <title>Desafio Pegada de Plástico</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        body { 
-            background: linear-gradient(135deg, #0c736b 0%, #11998e 100%); 
-            padding: 15px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* FUNDO DINÂMICO DA ILHA (SVG/CSS) */
-        .island-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 1;
-            pointer-events: none;
-            transition: all 0.8s ease;
-            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 60%, #20b2aa 100%);
-        }
-
-        /* Variação de poluição no céu/água */
-        .island-bg.dirty {
-            background: linear-gradient(to bottom, #7f8c8d 0%, #bdc3c7 60%, #4a5a5d 100%);
-        }
-        .island-bg.clean {
-            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 60%, #00c6ff 100%);
-        }
-
-        /* Desenho da Ilha */
-        .island-graphic {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 800px;
-            height: 250px;
-            text-align: center;
-        }
-
-        .trash-item {
-            position: absolute;
-            font-size: 24px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        .island-bg.dirty .trash-item { opacity: 1; }
-
-        .nature-item {
-            position: absolute;
-            font-size: 26px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        .island-bg.clean .nature-item { opacity: 1; }
-
-        /* CARTÃO DO JOGO */
-        .card { 
-            background: rgba(255, 255, 255, 0.95); 
-            width: 100%; 
-            max-width: 580px; 
-            border-radius: 20px; 
-            padding: 25px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
-            position: relative; 
-            z-index: 10;
-            backdrop-filter: blur(5px);
-        }
-
+        body { background: linear-gradient(135deg, #0c736b 0%, #11998e 100%); padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: #ffffff; width: 100%; max-width: 620px; border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .screen { display: none; }
         .screen.active { display: block; }
         h1 { color: #2c3e50; font-size: 24px; margin-bottom: 8px; text-align: center; }
@@ -88,7 +19,7 @@
         label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #2c3e50; }
         input[type="text"] { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px; outline: none; }
         
-        /* Seletores */
+        /* Seleção de Mascote e Acessórios */
         .selection-title { font-weight: bold; font-size: 14px; color: #2c3e50; margin: 10px 0 6px 0; text-align: left; }
         .grid-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
         .sel-item { border: 2px solid #e9ecef; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 26px; background: #f8f9fa; transition: all 0.2s; user-select: none; }
@@ -99,8 +30,9 @@
         .btn:hover { background: #0c736b; }
         .btn-sec { background: #6c757d; }
         .btn-inf { background: #8e44ad; }
-
-        /* Quiz */
+        .btn-inf:hover { background: #71368a; }
+        
+        /* Quiz Styles */
         .header-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #11998e; margin-bottom: 10px; align-items: center; }
         .progress-bg { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         .progress-fill { height: 100%; width: 0%; background: #38ef7d; transition: width 0.3s; }
@@ -110,7 +42,7 @@
         .feedback-box { display: none; background: #e8f8f5; border: 2px solid #11998e; border-radius: 10px; padding: 12px; margin-top: 10px; text-align: center; }
         .feedback-pts { font-size: 16px; font-weight: bold; color: #0c736b; }
 
-        /* Arcade Kahoot */
+        /* Arcade Styles (6 Lixeiras) */
         .arcade-box { text-align: center; }
         .timer-kahoot { width: 100%; height: 10px; background: #e9ecef; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
         .timer-kahoot-fill { height: 100%; width: 100%; background: #f39c12; transition: width 0.1s linear; }
@@ -118,15 +50,19 @@
         .waste-card.gold { border-color: #f1c40f; background: #fef9e7; animation: pulse 1s infinite; }
         .waste-card.mystery { background: #34495e; color: #fff; }
         .waste-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 5px; }
-        .bin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .bin-btn { border: none; border-radius: 10px; padding: 12px; font-weight: bold; color: white; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        
+        .bin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .bin-btn { border: none; border-radius: 10px; padding: 12px 6px; font-weight: bold; color: white; cursor: pointer; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
         .bin-plastic { background: #e74c3c; }
         .bin-paper { background: #3498db; }
         .bin-glass { background: #2ecc71; }
+        .bin-metal { background: #f1c40f; color: #2c3e50; }
         .bin-organic { background: #7f8c8d; }
+        .bin-nonrec { background: #34495e; }
+        
         .combo-badge { display: inline-block; background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
 
-        /* Rankings */
+        /* Tabs Ranking */
         .rank-tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; border: 1px solid #ccc; background: #f1f1f1; cursor: pointer; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .tab-btn.active { background: #11998e; color: white; border-color: #11998e; }
@@ -138,41 +74,13 @@
 </head>
 <body>
 
-<!-- FUNDO ANIMADO DA ILHA -->
-<div class="island-bg" id="bg-island">
-    <div class="island-graphic">
-        <!-- Elementos de Poluição (Erros) -->
-        <span class="trash-item" style="left: 15%; bottom: 40px;">🛍️</span>
-        <span class="trash-item" style="left: 25%; bottom: 20px;">🍾</span>
-        <span class="trash-item" style="right: 20%; bottom: 35px;">🥤</span>
-        <span class="trash-item" style="right: 30%; bottom: 15px;">🚬</span>
-
-        <!-- Elementos de Natureza Viva (Acertos) -->
-        <span class="nature-item" style="left: 18%; bottom: 60px;">🌸</span>
-        <span class="nature-item" style="left: 35%; bottom: 80px;">🌺</span>
-        <span class="nature-item" style="right: 22%; bottom: 65px;">🐬</span>
-        <span class="nature-item" style="right: 38%; bottom: 75px;">🐠</span>
-
-        <!-- Ilustração da Ilha em SVG -->
-        <svg viewBox="0 0 500 150" width="100%" height="100%">
-            <path d="M10,130 Q250,50 490,130 Z" fill="#f4d03f" />
-            <path d="M50,130 Q250,70 450,130 Z" fill="#27ae60" />
-            <!-- Palmeira -->
-            <rect x="240" y="40" width="10" height="50" fill="#795548" rx="3" />
-            <circle cx="230" cy="35" r="15" fill="#2ecc71" />
-            <circle cx="265" cy="35" r="15" fill="#2ecc71" />
-            <circle cx="247" cy="20" r="15" fill="#2ecc71" />
-        </svg>
-    </div>
-</div>
-
 <div class="card">
     <button class="sound-toggle" id="btn-sound">🔊</button>
 
     <!-- 1. TELA INICIAL -->
     <div id="s-start" class="screen active">
         <h1>♻️ Desafio Pegada de Plástico</h1>
-        <p>Sua pontuação muda o ecossistema da ilha ao fundo em tempo real!</p>
+        <p>Aprenda, jogue o Arcade rápido e conquiste o topo do ranking!</p>
         
         <div class="form-group">
             <label for="username">Seu Nome / Apelido:</label>
@@ -204,7 +112,7 @@
         <button class="btn btn-sec" id="btn-rank-start">Ver Rankings 🏆</button>
     </div>
 
-    <!-- 2. TELA DO QUIZ -->
+    <!-- 2. TELA DO QUIZ (10 PERGUNTAS) -->
     <div id="s-quiz" class="screen">
         <div class="header-info">
             <span id="q-num">Pergunta 1/10</span>
@@ -220,7 +128,7 @@
         </div>
     </div>
 
-    <!-- 3. TELA DO ARCADE -->
+    <!-- 3. TELA DO ARCADE (6 LIXEIRAS) -->
     <div id="s-arcade" class="screen arcade-box">
         <div class="header-info">
             <span id="arc-mode-title">Arcade Rápido</span>
@@ -238,7 +146,9 @@
             <button class="bin-btn bin-plastic" onclick="checkBin('plastic')">🔴 Plástico</button>
             <button class="bin-btn bin-paper" onclick="checkBin('paper')">🔵 Papel</button>
             <button class="bin-btn bin-glass" onclick="checkBin('glass')">🟢 Vidro</button>
+            <button class="bin-btn bin-metal" onclick="checkBin('metal')">🟡 Metal</button>
             <button class="bin-btn bin-organic" onclick="checkBin('organic')">⚪ Orgânico</button>
+            <button class="bin-btn bin-nonrec" onclick="checkBin('nonrec')">🟤 Rejeito</button>
         </div>
     </div>
 
@@ -248,7 +158,7 @@
         <p style="margin-top:5px;">Pontuação Total: <b id="final-score" style="color:#11998e; font-size:22px;">0 Pts</b></p>
         
         <div id="eco-tip-box" style="background:#e8f8f5; border:1px solid #11998e; border-radius:10px; padding:10px; margin:10px 0; font-size:12px; color:#2c3e50; text-align:left;">
-            <b>💡 Dica Eco de Ouro:</b> <span id="eco-tip-txt">Evite sacolinhas plásticas de hortifrúti!</span>
+            <b>💡 Dica Eco de Ouro:</b> <span id="eco-tip-txt">Recusar o plástico descartável antes de ser gerado é a melhor forma de proteger o planeta!</span>
         </div>
 
         <button class="btn" id="btn-download-cert">Baixar Certificado PNG 📜</button>
@@ -321,33 +231,52 @@
     var comboCount = 0;
     var currentRankTab = 'norm';
 
+    // 24 RESÍDUOS PARA AS 6 LIXEIRAS
     var wasteList = [
         { name: "Garrafa PET", type: "plastic", icon: "🍾" },
         { name: "Saco Plástico", type: "plastic", icon: "🛍️" },
         { name: "Copo Descartável", type: "plastic", icon: "🥤" },
+        { name: "Canudo Plástico", type: "plastic", icon: "🥤" },
+        
         { name: "Jornal Velho", type: "paper", icon: "📰" },
         { name: "Caixa de Papelão", type: "paper", icon: "📦" },
+        { name: "Revista Usada", type: "paper", icon: "📖" },
+        { name: "Saco de Pão", type: "paper", icon: "🥖" },
+
         { name: "Garrafa de Vidro", type: "glass", icon: "🍾" },
         { name: "Pote de Azeitona", type: "glass", icon: "🫙" },
+        { name: "Copo de Vidro", type: "glass", icon: "🥃" },
+        { name: "Frasco de Perfume", type: "glass", icon: "🧪" },
+
+        { name: "Lata de Refrigerante", type: "metal", icon: "🥫" },
+        { name: "Lata de Conserva", type: "metal", icon: "🥫" },
+        { name: "Folha de Alumínio", type: "metal", icon: "⚙️" },
+        { name: "Tampinha de Garrafa", type: "metal", icon: "🔘" },
+
         { name: "Casca de Banana", type: "organic", icon: "🍌" },
-        { name: "Restos de Maçã", type: "organic", icon: "🍎" }
+        { name: "Restos de Maçã", type: "organic", icon: "🍎" },
+        { name: "Borra de Café", type: "organic", icon: "☕" },
+        { name: "Casca de Ovo", type: "organic", icon: "🥚" },
+
+        { name: "Esponja de Louça", type: "nonrec", icon: "🧽" },
+        { name: "Papel Higiênico", type: "nonrec", icon: "🧻" },
+        { name: "Fralda Descartável", type: "nonrec", icon: "👶" },
+        { name: "Espelho Quebrado", type: "nonrec", icon: "🪞" }
     ];
 
+    // 10 PERGUNTAS COMPLETAS
     var quizData = [
-        { q: "Como você compra vegetais e hortifrúti no mercado?", opts: [{ txt: "Uso saquinhos plásticos transparentes individuais.", pts: 1, fb: "Saquinhos são de uso único e difíceis de reciclar." }, { txt: "Levo ecobag e peso os vegetais soltos.", pts: 3, fb: "Excelente! Evita plásticos descartáveis na fonte." }] },
-        { q: "Qual o seu hábito ao pedir delivery de comida?", opts: [{ txt: "Aceito talheres e canudos plásticos.", pts: 1, fb: "Esses itens viram lixo em menos de 10 minutos." }, { txt: "Peço para não enviarem descartáveis.", pts: 3, fb: "Muito bem! Use seus próprios talheres em casa." }] }
+        { q: "Como você costuma comprar hortifrúti no supermercado?", opts: [{ txt: "Uso sacolas plásticas transparentes para cada item.", pts: 1, fb: "Sacolinhas de hortifrúti são de uso único e raramente recicladas." }, { txt: "Levo ecobag e peso os vegetais soltos.", pts: 3, fb: "Excelente! Você evita o plástico descartável na fonte." }] },
+        { q: "Qual o seu hábito ao beber água fora de casa?", opts: [{ txt: "Compro garrafas PET descartáveis.", pts: 1, fb: "Garrafas PET são um dos maiores poluentes dos oceanos." }, { txt: "Carrego minha própria garrafa reutilizável.", pts: 3, fb: "Perfeito! Economiza dinheiro e evita resíduos." }] },
+        { q: "O que faz sobre talheres e canudos ao pedir delivery?", opts: [{ txt: "Esqueço de recusar; vem tudo de plástico.", pts: 1, fb: "Talheres de delivery viram lixo em minutos." }, { txt: "Peço explicitamente para não enviarem descartáveis.", pts: 3, fb: "Muito bem! Use os talheres laváveis da sua casa." }] },
+        { q: "Como é o consumo de itens de limpeza/higiene na sua casa?", opts: [{ txt: "Compro sempre frascos plásticos pequenos.", pts: 1, fb: "Frascos pequenos geram um volume maior de plástico." }, { txt: "Priorizo embalagens refil ou produtos em barra.", pts: 3, fb: "Incrível! Refis usam até 80% menos plástico." }] },
+        { q: "Como destina os resíduos plásticos na sua residência?", opts: [{ txt: "Misturo no lixo comum sem separar.", pts: 1, fb: "Plásticos no lixo comum vão para aterros por séculos." }, { txt: "Lavo e separo para a Coleta Seletiva.", pts: 3, fb: "Exemplar! A reciclagem gera renda para cooperativas." }] },
+        { q: "Em festas e eventos, qual é a sua atitude?", opts: [{ txt: "Uso vários copos plásticos descartáveis.", pts: 1, fb: "Em poucas horas um único evento gera centenas de copos de lixo." }, { txt: "Levo meu próprio copo reutilizável.", pts: 3, fb: "Nota 10! Um eco-copo evita dezenas de descartáveis." }] },
+        { q: "O que faz com as esponjas de lavar louça amarelas?", opts: [{ txt: "Uso e troco semanalmente no lixo comum.", pts: 1, fb: "Esponjas sintéticas soltam microplásticos pelo ralo." }, { txt: "Substituo por bucha vegetal biodegradável.", pts: 3, fb: "Sensacional! A bucha vegetal é 100% compostável." }] },
+        { q: "Qual a sua preferência na hora de comprar roupas?", opts: [{ txt: "Compro tecidos sintéticos (poliéster/nylon) sem verificar.", pts: 1, fb: "Sintéticos soltam microfibras de plástico na lavagem." }, { txt: "Dou preferência a algodão e fibras naturais.", pts: 3, fb: "Ótimo! Fibras naturais protegem os oceanos." }] },
+        { q: "O que faz com embalagens de congelados e pratos prontos?", opts: [{ txt: "Consumo diariamente pratos em bandejas pretas.", pts: 1, fb: "Bandejas pretas são difíceis de identificar nos triadores." }, { txt: "Cozinho e guardo em potes de vidro.", pts: 3, fb: "Excelente! Vidro dura muito e não contamina o alimento." }] },
+        { q: "Qual a sua atitude sobre canudos e tampas plásticas?", opts: [{ txt: "Uso sem pensar em bebidas geladas e cafés.", pts: 1, fb: "Acessórios pequenos escapam da coleta e vão ao mar." }, { txt: "Recuso canudos e tampas descartáveis.", pts: 3, fb: "Atitude nota 1000! Recusar é o pilar mais importante." }] }
     ];
-
-    function updateIslandVisual() {
-        var bg = document.getElementById('bg-island');
-        if (totalScore >= 500) {
-            bg.className = 'island-bg clean';
-        } else if (totalScore < 0 || comboCount === 0 && totalScore < 200) {
-            bg.className = 'island-bg dirty';
-        } else {
-            bg.className = 'island-bg';
-        }
-    }
 
     function selectMascot(id, el) {
         selectedMascot = id;
@@ -378,7 +307,6 @@
         if (!validateName()) return;
         isInfiniteMode = false;
         currentQ = 0; totalScore = 0;
-        updateIslandVisual();
         loadQuizQ();
         setScreen('s-quiz');
     }
@@ -387,7 +315,6 @@
         if (!validateName()) return;
         isInfiniteMode = true;
         totalScore = 0;
-        updateIslandVisual();
         startArcade();
     }
 
@@ -405,10 +332,9 @@
             b.className = 'option-btn';
             b.innerText = o.txt;
             b.onclick = function() {
-                totalScore += (o.pts === 3 ? 300 : -100);
-                updateIslandVisual();
-                playSound(o.pts === 3 ? 'correct' : 'wrong');
-                document.getElementById('fb-pts').innerText = (o.pts === 3 ? '+300 Pts!' : '-100 Pts');
+                totalScore += (o.pts * 100);
+                playSound('correct');
+                document.getElementById('fb-pts').innerText = '+' + (o.pts * 100) + ' Pts!';
                 document.getElementById('fb-msg').innerText = o.fb;
                 document.getElementById('fb-box').style.display = 'block';
                 document.querySelectorAll('.option-btn').forEach(function(btn) { btn.disabled = true; });
@@ -466,10 +392,8 @@
             document.getElementById('item-timer-bar').style.width = Math.max(0, ((itemTimeLeft / 7.5) * 100)) + '%';
             if (itemTimeLeft <= 0) {
                 playSound('wrong');
-                totalScore -= 100;
                 comboCount = 0;
                 updateComboTag();
-                updateIslandVisual();
                 nextArcadeItem();
             }
         }, 100);
@@ -489,11 +413,9 @@
             if (isInfiniteMode) { globalTimeLeft += 1; }
         } else {
             playSound('wrong');
-            totalScore -= 150;
             comboCount = 0;
         }
         updateComboTag();
-        updateIslandVisual();
         nextArcadeItem();
     }
 
@@ -589,10 +511,7 @@
         document.getElementById('btn-next').onclick = advanceQuiz;
         document.getElementById('btn-download-cert').onclick = generateCert;
         document.getElementById('btn-rank-res').onclick = function() { renderRanking(); setScreen('s-rank'); };
-        document.getElementById('btn-restart').onclick = function() { totalScore = 0; updateIslandVisual(); setScreen('s-start'); };
-
-        document.getElementById('tab-norm').onclick = function() { switchRankTab('norm'); };
-        document.getElementById('tab-inf').onclick = function() { switchRankTab('inf'); };
+        document.getElementById('btn-restart').onclick = function() { setScreen('s-start'); };
     };
 </script>
 </body>
