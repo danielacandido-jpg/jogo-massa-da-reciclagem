@@ -46,7 +46,7 @@
         .arcade-box { text-align: center; }
         .timer-kahoot { width: 100%; height: 10px; background: #e9ecef; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
         .timer-kahoot-fill { height: 100%; width: 100%; background: #f39c12; transition: width 0.1s linear; }
-        .waste-card { background: #f8f9fa; border: 3px solid #e9ecef; border-radius: 16px; padding: 20px; font-size: 50px; margin-bottom: 15px; position: relative; }
+        .waste-card { background: #f8f9fa; border: 3px solid #e9ecef; border-radius: 16px; padding: 20px; font-size: 55px; margin-bottom: 15px; position: relative; }
         .waste-card.gold { border-color: #f1c40f; background: #fef9e7; animation: pulse 1s infinite; }
         .waste-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 5px; }
         
@@ -60,6 +60,12 @@
         .bin-nonrec { background: #34495e; }
         
         .combo-badge { display: inline-block; background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+
+        /* Medalhas no Final */
+        .badges-results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; text-align: center; }
+        .badge-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 8px; font-size: 11px; color: #2c3e50; }
+        .badge-box.unlocked { background: #e8f8f5; border-color: #11998e; font-weight: bold; }
+        .badge-icon { font-size: 22px; display: block; margin-bottom: 3px; }
 
         /* Tabs Ranking */
         .rank-tabs { display: flex; gap: 5px; margin-bottom: 10px; }
@@ -111,7 +117,7 @@
         <button class="btn btn-sec" id="btn-rank-start">Ver Rankings 🏆</button>
     </div>
 
-    <!-- 2. TELA DO QUIZ (10 PERGUNTAS) -->
+    <!-- 2. TELA DO QUIZ -->
     <div id="s-quiz" class="screen">
         <div class="header-info">
             <span id="q-num">Pergunta 1/10</span>
@@ -137,8 +143,8 @@
         <div class="timer-kahoot"><div id="item-timer-bar" class="timer-kahoot-fill"></div></div>
         
         <div id="waste-card" class="waste-card">
-            <div id="w-icon">🥤</div>
-            <div id="w-name" class="waste-name">Copo Plástico</div>
+            <div id="w-icon">🍼</div>
+            <div id="w-name" class="waste-name">Garrafa PET</div>
         </div>
 
         <div class="bin-grid">
@@ -151,11 +157,14 @@
         </div>
     </div>
 
-    <!-- 4. TELA DE RESULTADO -->
+    <!-- 4. TELA DE RESULTADO COM MEDALHAS -->
     <div id="s-res" class="screen" style="text-align: center;">
         <h2 style="color: #2c3e50;">Partida Finalizada! 🎉</h2>
         <p style="margin-top:5px;">Pontuação Total: <b id="final-score" style="color:#11998e; font-size:22px;">0 Pts</b></p>
         
+        <div class="selection-title" style="text-align:center;">Medalhas Conquistadas:</div>
+        <div id="res-badges" class="badges-results"></div>
+
         <div id="eco-tip-box" style="background:#e8f8f5; border:1px solid #11998e; border-radius:10px; padding:10px; margin:10px 0; font-size:12px; color:#2c3e50; text-align:left;">
             <b>💡 Dica Eco de Ouro:</b> <span id="eco-tip-txt">Recusar o plástico descartável antes de ser gerado é a melhor forma de proteger o planeta!</span>
         </div>
@@ -218,6 +227,18 @@
         } catch(e) {}
     }
 
+    function shuffle(array) {
+        var currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            var temp = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temp;
+        }
+        return array;
+    }
+
     var mascotIcons = { turtle:'🐢', dolphin:'🐬', whale:'🐳', shark:'🦈', octopus:'🐙', capybara:'🦫' };
     var accIcons = { none:'', glasses:'🕶️', cap:'🧢', bow:'🎀', crown:'👑', magic:'✨' };
 
@@ -225,31 +246,34 @@
     var selectedAcc = 'none';
     var userName = "Anônimo";
     var totalScore = 0;
+    var quizScore = 0;
+    var arcadeScore = 0;
     var currentQ = 0;
     var isInfiniteMode = false;
     
+    var activeQuizQuestions = [];
     var arcadeTimer = null;
     var itemTimer = null;
     var globalTimeLeft = 60;
     var itemTimeLeft = 7.5;
     var currentItem = null;
     var comboCount = 0;
+    var maxCombo = 0;
+    var arcadeHits = 0;
     var currentRankTab = 'norm';
 
     // 50 RESÍDUOS VARIADOS
     var wasteList = [
-        // PLÁSTICO (🔴)
-        { name: "Garrafa PET", type: "plastic", icon: "🍾" },
+        { name: "Garrafa PET", type: "plastic", icon: "🍼" },
         { name: "Saco Plástico", type: "plastic", icon: "🛍️" },
         { name: "Copo Descartável", type: "plastic", icon: "🥤" },
-        { name: "Canudo Plástico", type: "plastic", icon: "🥤" },
+        { name: "Canudo Plástico", type: "plastic", icon: "🧃" },
         { name: "Embalagem de Salgadinho", type: "plastic", icon: "🍿" },
         { name: "Pote de Iogurte", type: "plastic", icon: "🍧" },
         { name: "Frasco de Xampu", type: "plastic", icon: "🧴" },
         { name: "Escova de Dentes Plástica", type: "plastic", icon: "🪥" },
-        { name: "Brinquedo Plástico Quebrado", type: "plastic", icon: "🧸" },
+        { name: "Brinquedo Plástico", type: "plastic", icon: "🧸" },
 
-        // PAPEL (🔵)
         { name: "Jornal Velho", type: "paper", icon: "📰" },
         { name: "Caixa de Papelão", type: "paper", icon: "📦" },
         { name: "Revista Usada", type: "paper", icon: "📖" },
@@ -260,17 +284,15 @@
         { name: "Rolo de Papel Toalha", type: "paper", icon: "🧻" },
         { name: "Caixa de Ovo de Papelão", type: "paper", icon: "🥚" },
 
-        // VIDRO (🟢)
         { name: "Garrafa de Vidro", type: "glass", icon: "🍾" },
         { name: "Pote de Azeitona", type: "glass", icon: "🫙" },
-        { name: "Copo de Vidro Quebrado", type: "glass", icon: "🥃" },
+        { name: "Copo de Vidro", type: "glass", icon: "🥃" },
         { name: "Frasco de Perfume", type: "glass", icon: "🧪" },
         { name: "Pote de Geleia", type: "glass", icon: "🏺" },
         { name: "Garrafa de Azeite", type: "glass", icon: "🫒" },
         { name: "Caco de Vidro Embalado", type: "glass", icon: "🧩" },
-        { name: "Frasco de Xarope/Remédio", type: "glass", icon: "💊" },
+        { name: "Frasco de Remédio", type: "glass", icon: "💊" },
 
-        // METAL (🟡)
         { name: "Lata de Refrigerante", type: "metal", icon: "🥫" },
         { name: "Lata de Conserva", type: "metal", icon: "🥫" },
         { name: "Folha de Alumínio", type: "metal", icon: "⚙️" },
@@ -280,7 +302,6 @@
         { name: "Panela Velha de Alumínio", type: "metal", icon: "🍳" },
         { name: "Prego / Parafuso", type: "metal", icon: "🔩" },
 
-        // ORGÂNICO (⚪)
         { name: "Casca de Banana", type: "organic", icon: "🍌" },
         { name: "Restos de Maçã", type: "organic", icon: "🍎" },
         { name: "Borra de Café", type: "organic", icon: "☕" },
@@ -290,7 +311,6 @@
         { name: "Osso de Galinha", type: "organic", icon: "🍗" },
         { name: "Casca de Laranja", type: "organic", icon: "🍊" },
 
-        // REJEITO / NÃO RECICLÁVEL (🟤)
         { name: "Esponja de Louça Sintética", type: "nonrec", icon: "🧽" },
         { name: "Papel Higiênico Usado", type: "nonrec", icon: "🧻" },
         { name: "Fralda Descartável", type: "nonrec", icon: "👶" },
@@ -301,12 +321,11 @@
         { name: "Máscara Descartável", type: "nonrec", icon: "😷" }
     ];
 
-    // 10 PERGUNTAS COM 3 OPÇÕES DE RESPOSTA
-    var quizData = [
+    var rawQuizData = [
         { q: "Como você costuma comprar hortifrúti no supermercado?", opts: [
             { txt: "Uso sacolas plásticas transparentes para cada item.", pts: 1, fb: "Sacolinhas são de uso único e difíceis de reciclar." },
             { txt: "Junto alguns itens na mesma sacola quando possível.", pts: 2, fb: "Reduz um pouco, mas ainda gera plásticos desnecessários." },
-            { txt: "Levo minhas próprias ecobags e pesarei os vegetais soltos.", pts: 3, fb: "Excelente! Evita plástico descartável diretamente na fonte." }
+            { txt: "Levo minhas próprias ecobags e peso os vegetais soltos.", pts: 3, fb: "Excelente! Evita plástico descartável diretamente na fonte." }
         ]},
         { q: "Qual é o seu hábito principal ao beber água fora de casa?", opts: [
             { txt: "Compro garrafas PET descartáveis sem pensar.", pts: 1, fb: "Garrafas PET são um dos maiores poluentes nos oceanos." },
@@ -383,7 +402,13 @@
     function startQuizMode() {
         if (!validateName()) return;
         isInfiniteMode = false;
-        currentQ = 0; totalScore = 0;
+        currentQ = 0; totalScore = 0; quizScore = 0; arcadeScore = 0;
+        arcadeHits = 0; maxCombo = 0; comboCount = 0;
+
+        activeQuizQuestions = JSON.parse(JSON.stringify(rawQuizData));
+        shuffle(activeQuizQuestions);
+        activeQuizQuestions.forEach(function(q) { shuffle(q.opts); });
+
         loadQuizQ();
         setScreen('s-quiz');
     }
@@ -391,15 +416,16 @@
     function startInfMode() {
         if (!validateName()) return;
         isInfiniteMode = true;
-        totalScore = 0;
+        totalScore = 0; quizScore = 0; arcadeScore = 0;
+        arcadeHits = 0; maxCombo = 0; comboCount = 0;
         startArcade();
     }
 
     function loadQuizQ() {
-        var q = quizData[currentQ];
-        document.getElementById('q-num').innerText = 'Pergunta ' + (currentQ + 1) + '/' + quizData.length;
+        var q = activeQuizQuestions[currentQ];
+        document.getElementById('q-num').innerText = 'Pergunta ' + (currentQ + 1) + '/' + activeQuizQuestions.length;
         document.getElementById('q-title').innerText = q.q;
-        document.getElementById('p-bar').style.width = ((currentQ / quizData.length) * 100) + '%';
+        document.getElementById('p-bar').style.width = ((currentQ / activeQuizQuestions.length) * 100) + '%';
         document.getElementById('fb-box').style.display = 'none';
 
         var box = document.getElementById('opts-box');
@@ -409,9 +435,11 @@
             b.className = 'option-btn';
             b.innerText = o.txt;
             b.onclick = function() {
-                totalScore += (o.pts * 100);
+                var pts = (o.pts * 100);
+                quizScore += pts;
+                totalScore += pts;
                 playSound('correct');
-                document.getElementById('fb-pts').innerText = '+' + (o.pts * 100) + ' Pts!';
+                document.getElementById('fb-pts').innerText = '+' + pts + ' Pts!';
                 document.getElementById('fb-msg').innerText = o.fb;
                 document.getElementById('fb-box').style.display = 'block';
                 document.querySelectorAll('.option-btn').forEach(function(btn) { btn.disabled = true; });
@@ -422,7 +450,7 @@
 
     function advanceQuiz() {
         currentQ++;
-        if (currentQ < quizData.length) { loadQuizQ(); } 
+        if (currentQ < activeQuizQuestions.length) { loadQuizQ(); } 
         else { startArcade(); }
     }
 
@@ -483,11 +511,17 @@
         clearInterval(itemTimer);
         if (type === currentItem.type) {
             comboCount++;
+            arcadeHits++;
+            if (comboCount > maxCombo) maxCombo = comboCount;
+
             var mult = comboCount >= 3 ? 2 : 1;
             var pointsEarned = Math.round((itemTimeLeft / 7.5) * 500) * mult;
             if (currentItem.isGold) pointsEarned *= 2;
 
-            totalScore += Math.max(100, pointsEarned);
+            var earned = Math.max(100, pointsEarned);
+            arcadeScore += earned;
+            totalScore += earned;
+
             playSound(comboCount >= 3 ? 'combo' : 'correct');
             updateComboTag();
             nextArcadeItem();
@@ -514,6 +548,27 @@
         }
     }
 
+    function renderBadges() {
+        var bBox = document.getElementById('res-badges');
+        bBox.innerHTML = '';
+
+        var list = [
+            { name: "Iniciante Eco", icon: "🥉", un: quizScore >= 1000 },
+            { name: "Protetor da Fauna", icon: "🐢", un: quizScore >= 2000 },
+            { name: "Mestre Sustentável", icon: "🏆", un: quizScore >= 2800 },
+            { name: "Reciclador", icon: "♻️", un: arcadeHits >= 5 },
+            { name: "Mestre Combo", icon: "🔥", un: maxCombo >= 3 },
+            { name: "Sobrevivente", icon: "💀", un: isInfiniteMode && arcadeHits >= 10 }
+        ];
+
+        list.forEach(function(b) {
+            var div = document.createElement('div');
+            div.className = 'badge-box' + (b.un ? ' unlocked' : '');
+            div.innerHTML = '<span class="badge-icon">' + (b.un ? b.icon : '🔒') + '</span>' + b.name;
+            bBox.appendChild(div);
+        });
+    }
+
     function endArcade() {
         clearInterval(arcadeTimer);
         clearInterval(itemTimer);
@@ -527,6 +582,7 @@
         localStorage.setItem(key, JSON.stringify(r.slice(0, 10)));
 
         document.getElementById('final-score').innerText = totalScore + ' Pts';
+        renderBadges();
         setScreen('s-res');
     }
 
